@@ -1,0 +1,1 @@
+-- Phase 0 foundation: intentionally no domain tables.

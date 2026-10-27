@@ -1,0 +1,26 @@
+# Java and Maven
+target/
+*.class
+*.jar
+*.war
+.mvn/timing.properties
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Environment and operating systems
+.env
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+
+# Local reports and temporary files
+coverage/
+*.tmp
+*.swp
