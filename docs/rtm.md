@@ -3,7 +3,7 @@
 | Requisito | Risco | Implementacao | Teste | Evidencia | Status |
 |---|---|---|---|---|---|
 | RF-01 | Autenticacao indevida, token invalido e acesso nao autenticado | Usuario/Perfil, BCrypt, login JWT stateless, filtro JWT, 401 para ausencia/token invalido/expirado e matriz de autorizacao | `AuthServiceTest`, `AuthControllerTest`, `PasswordEncoderTest`, `JwtServiceTest`, `JwtAuthenticationFilterTest`, `SecurityAuthorizationIntegrationTest`, `UsuarioRepositoryPostgresTest` | Testes sem Docker devem ser executados; o teste PostgreSQL requer Docker/Testcontainers | EM IMPLEMENTACAO |
-| RF-02 | Cadastro indevido e dados invalidos de recursos | Sala e Professor, migrations Flyway, DTOs, repositories, APIs e autorizacao ADMIN para cadastro | `SalaAuthorizationIntegrationTest`, `SalaRepositoryPostgresTest`, `ProfessorAuthorizationIntegrationTest`, `ProfessorRepositoryPostgresTest` | TESTE CRIADO - EXECUCAO PENDENTE por `testCompile`; persistencia requer Docker/Testcontainers | EM IMPLEMENTACAO |
+| RF-02 | Cadastro indevido, dados invalidos e estoque estruturalmente impossivel | Sala, Professor e Material, migrations Flyway, DTOs, repositories, APIs e autorizacao ADMIN para cadastro | `SalaAuthorizationIntegrationTest`, `SalaRepositoryPostgresTest`, `ProfessorAuthorizationIntegrationTest`, `ProfessorRepositoryPostgresTest`, `MaterialAuthorizationIntegrationTest`, `MaterialRepositoryPostgresTest` | IMPLEMENTACAO COMPLETA / VALIDACAO PENDENTE: `testCompile` bloqueia execucao; persistencia requer Docker/Testcontainers | EM IMPLEMENTACAO |
 | RF-03 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
 | RF-04 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
 | RF-05 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
