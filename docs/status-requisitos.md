@@ -1,6 +1,6 @@
 # Status dos requisitos
 
-RF-01 esta **EM IMPLEMENTACAO**: usuario/perfis, BCrypt, login JWT, autenticacao stateless e matriz de autorizacao foram implementados. RF-02 esta **IMPLEMENTACAO COMPLETA / VALIDACAO PENDENTE**: Sala, Professor e Material foram implementados, mas `testCompile` e `verify` ainda impedem validacao da suite. RF-03 a RF-14 estao **NAO IMPLEMENTADO**.
+RF-01 esta **EM IMPLEMENTACAO**: usuario/perfis, BCrypt, login JWT, autenticacao stateless e matriz de autorizacao foram implementados. RF-02 esta **IMPLEMENTACAO COMPLETA / VALIDACAO PENDENTE**: Sala, Professor e Material foram implementados, mas `testCompile` e `verify` ainda impedem validacao da suite. RF-03 esta **PARCIALMENTE IMPLEMENTADO — filtros estruturais implementados; disponibilidade temporal pendente.** RF-04 a RF-14 estao **NAO IMPLEMENTADO**.
 
 Um requisito somente podera ser marcado como concluido apos: (1) implementacao, (2) teste correspondente, (3) teste verde, (4) evidencia e (5) atualizacao da RTM.
 
@@ -8,7 +8,7 @@ Um requisito somente podera ser marcado como concluido apos: (1) implementacao, 
 |---|---|
 | RF-01 | EM IMPLEMENTACAO |
 | RF-02 | IMPLEMENTACAO COMPLETA / VALIDACAO PENDENTE |
-| RF-03 | NAO IMPLEMENTADO |
+| RF-03 | PARCIALMENTE IMPLEMENTADO — filtros estruturais implementados; disponibilidade temporal pendente. |
 | RF-04 | NAO IMPLEMENTADO |
 | RF-05 | NAO IMPLEMENTADO |
 | RF-06 | NAO IMPLEMENTADO |

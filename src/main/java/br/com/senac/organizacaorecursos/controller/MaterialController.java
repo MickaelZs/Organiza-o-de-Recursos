@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,8 +31,9 @@ public class MaterialController {
     }
 
     @GetMapping
-    public List<MaterialResponse> listar() {
-        return materialService.listar().stream().map(MaterialResponse::from).toList();
+    public List<MaterialResponse> listar(@RequestParam(required = false) String tipo,
+                                         @RequestParam(required = false) String localizacao) {
+        return materialService.buscar(tipo, localizacao).stream().map(MaterialResponse::from).toList();
     }
 
     @GetMapping("/{id}")

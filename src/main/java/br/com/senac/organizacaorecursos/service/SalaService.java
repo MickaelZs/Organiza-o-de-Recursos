@@ -4,6 +4,8 @@ import br.com.senac.organizacaorecursos.dto.SalaCreateRequest;
 import br.com.senac.organizacaorecursos.entity.Sala;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import java.util.List;
+import java.util.Locale;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,33 @@ public class SalaService {
     }
 
     @Transactional(readOnly = true)
+    public List<Sala> buscar(String tipo, Integer capacidadeMinima, String localizacao) {
+        Specification<Sala> filtros = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
+        if (temTexto(tipo)) {
+            filtros = filtros.and(contemIgnorandoMaiusculas("tipo", tipo));
+        }
+        if (capacidadeMinima != null) {
+            filtros = filtros.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.<Integer>get("capacidade"), capacidadeMinima));
+        }
+        if (temTexto(localizacao)) {
+            filtros = filtros.and(contemIgnorandoMaiusculas("localizacao", localizacao));
+        }
+        return salaRepository.findAll(filtros);
+    }
+
+    @Transactional(readOnly = true)
     public Sala buscarPorId(Long id) {
         return salaRepository.findById(id).orElseThrow(SalaNotFoundException::new);
+    }
+
+    private Specification<Sala> contemIgnorandoMaiusculas(String atributo, String valor) {
+        String termo = "%" + valor.trim().toLowerCase(Locale.ROOT) + "%";
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(criteriaBuilder.lower(root.get(atributo)), termo);
+    }
+
+    private boolean temTexto(String valor) {
+        return valor != null && !valor.isBlank();
     }
 }

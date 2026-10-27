@@ -4,6 +4,8 @@ import br.com.senac.organizacaorecursos.dto.ProfessorCreateRequest;
 import br.com.senac.organizacaorecursos.entity.Professor;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import java.util.List;
+import java.util.Locale;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,17 @@ public class ProfessorService {
     @Transactional(readOnly = true)
     public List<Professor> listar() {
         return professorRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Professor> buscarPorCompetencia(String competencia) {
+        if (competencia == null || competencia.isBlank()) {
+            return professorRepository.findAll();
+        }
+        String termo = "%" + competencia.trim().toLowerCase(Locale.ROOT) + "%";
+        Specification<Professor> filtro = (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("competencia")), termo);
+        return professorRepository.findAll(filtro);
     }
 
     @Transactional(readOnly = true)

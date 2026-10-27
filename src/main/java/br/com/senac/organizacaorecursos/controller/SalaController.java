@@ -4,6 +4,7 @@ import br.com.senac.organizacaorecursos.dto.SalaCreateRequest;
 import br.com.senac.organizacaorecursos.dto.SalaResponse;
 import br.com.senac.organizacaorecursos.service.SalaService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 @RestController
 @RequestMapping("/api/salas")
+@Validated
 public class SalaController {
     private final SalaService salaService;
 
@@ -30,8 +34,10 @@ public class SalaController {
     }
 
     @GetMapping
-    public List<SalaResponse> listar() {
-        return salaService.listar().stream().map(SalaResponse::from).toList();
+    public List<SalaResponse> listar(@RequestParam(required = false) String tipo,
+                                     @RequestParam(required = false) @Min(0) Integer capacidadeMinima,
+                                     @RequestParam(required = false) String localizacao) {
+        return salaService.buscar(tipo, capacidadeMinima, localizacao).stream().map(SalaResponse::from).toList();
     }
 
     @GetMapping("/{id}")
