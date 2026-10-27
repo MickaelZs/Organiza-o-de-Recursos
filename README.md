@@ -20,6 +20,8 @@ Crie um banco PostgreSQL chamado `organizacao_recursos` e defina as variáveis a
 DB_URL=jdbc:postgresql://localhost:5432/organizacao_recursos
 DB_USERNAME=postgres
 DB_PASSWORD=sua-senha-local
+JWT_SECRET=segredo-base64-fornecido-pelo-ambiente
+JWT_EXPIRATION=PT2H
 ```
 
 ## Executar
@@ -37,6 +39,8 @@ Windows:
 ```
 
 Health check técnico: `GET http://localhost:8080/api/health` (retorna `{"status":"UP"}`). A documentação OpenAPI estará em `/swagger-ui.html`.
+
+Autenticação da API: `POST /api/auth/login` recebe `email` e `senha` e retorna um JWT Bearer. O segredo JWT é obrigatório via variável de ambiente e nunca deve ser versionado.
 
 ## Testes e verificação
 

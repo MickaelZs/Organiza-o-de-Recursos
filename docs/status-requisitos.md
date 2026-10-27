@@ -1,6 +1,6 @@
 # Status dos requisitos
 
-RF-01 está **EM IMPLEMENTAÇÃO**: o modelo de usuários e perfis foi criado; autenticação e autorização permanecem pendentes. RF-02 a RF-14 estão **NÃO IMPLEMENTADO**.
+RF-01 está **EM IMPLEMENTAÇÃO**: modelo de usuários/perfis, login JWT e autenticação stateless foram criados. A matriz completa de autorização dos endpoints futuros permanece pendente. RF-02 a RF-14 estão **NÃO IMPLEMENTADO**.
 
 Um requisito somente poderá ser marcado como concluído após: (1) implementação, (2) teste correspondente, (3) teste verde, (4) evidência e (5) atualização da RTM.
 

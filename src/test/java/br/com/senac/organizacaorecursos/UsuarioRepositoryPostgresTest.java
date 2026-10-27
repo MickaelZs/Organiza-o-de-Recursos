@@ -21,6 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @Testcontainers
 class UsuarioRepositoryPostgresTest {
+    private static final String BCRYPT_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
     @Container
     static final PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("organizacao_recursos_test")
@@ -43,7 +44,7 @@ class UsuarioRepositoryPostgresTest {
     @Test
     void persisteUsuarioComPerfilComoTextoEBuscaPorEmail() {
         Usuario usuario = usuarioRepository.saveAndFlush(
-                new Usuario("Ana Silva", "ana.silva@senac.br", "hash-futuro", Perfil.RESPONSAVEL, true));
+                new Usuario("Ana Silva", "ana.silva@senac.br", BCRYPT_HASH, Perfil.RESPONSAVEL, true));
 
         Usuario encontrado = usuarioRepository.findByEmail("ana.silva@senac.br").orElseThrow();
 
@@ -58,10 +59,10 @@ class UsuarioRepositoryPostgresTest {
     @Test
     void rejeitaEmailDuplicadoNoPostgresql() {
         usuarioRepository.saveAndFlush(
-                new Usuario("Ana Silva", "duplicado@senac.br", "hash-futuro", Perfil.SOLICITANTE, true));
+                new Usuario("Ana Silva", "duplicado@senac.br", BCRYPT_HASH, Perfil.SOLICITANTE, true));
 
         assertThatThrownBy(() -> usuarioRepository.saveAndFlush(
-                new Usuario("Outra Ana", "duplicado@senac.br", "outro-hash", Perfil.ADMIN, false)))
+                new Usuario("Outra Ana", "duplicado@senac.br", BCRYPT_HASH, Perfil.ADMIN, false)))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

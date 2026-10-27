@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -22,7 +23,9 @@ public class Usuario {
     private Long id;
     @NotBlank @Column(nullable = false) private String nome;
     @NotBlank @Email @Column(nullable = false, unique = true) private String email;
-    @NotBlank @Column(nullable = false) private String senha;
+    @NotBlank
+    @Pattern(regexp = "^\\$2[aby]\\$\\d{2}\\$.{53}$", message = "A senha deve ser armazenada como hash BCrypt")
+    @Column(nullable = false) private String senha;
     @NotNull @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private Perfil perfil;
     @NotNull @Column(nullable = false) private Boolean ativo;
     @NotNull @Column(name = "created_at", nullable = false, updatable = false) private OffsetDateTime createdAt;
