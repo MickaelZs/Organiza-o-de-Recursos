@@ -1,12 +1,12 @@
 # Status dos requisitos
 
-Todos os requisitos RF-01 a RF-14 estão **NÃO IMPLEMENTADO** nesta Fase 0.
+RF-01 está **EM IMPLEMENTAÇÃO**: o modelo de usuários e perfis foi criado; autenticação e autorização permanecem pendentes. RF-02 a RF-14 estão **NÃO IMPLEMENTADO**.
 
 Um requisito somente poderá ser marcado como concluído após: (1) implementação, (2) teste correspondente, (3) teste verde, (4) evidência e (5) atualização da RTM.
 
 | Requisito | Status |
 |---|---|
-| RF-01 | NÃO IMPLEMENTADO |
+| RF-01 | EM IMPLEMENTAÇÃO |
 | RF-02 | NÃO IMPLEMENTADO |
 | RF-03 | NÃO IMPLEMENTADO |
 | RF-04 | NÃO IMPLEMENTADO |

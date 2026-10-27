@@ -2,7 +2,7 @@
 
 | Requisito | Risco | Implementação | Teste | Evidência | Status |
 |---|---|---|---|---|---|
-| RF-01 | Pendente | pendente | pendente | pendente | NÃO IMPLEMENTADO |
+| RF-01 | Pendente | modelo Usuario e Perfil | UsuarioRepositoryPostgresTest | pendente | EM IMPLEMENTAÇÃO |
 | RF-02 | Pendente | pendente | pendente | pendente | NÃO IMPLEMENTADO |
 | RF-03 | Pendente | pendente | pendente | pendente | NÃO IMPLEMENTADO |
 | RF-04 | Pendente | pendente | pendente | pendente | NÃO IMPLEMENTADO |
