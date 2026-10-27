@@ -29,6 +29,17 @@ class JwtServiceTest {
     }
 
     @Test
+    void rejeitaTokenComAssinaturaDeOutroSegredo() {
+        String token = service(Duration.ofHours(1)).generateToken(
+                new Usuario("Ana", "ana@senac.br", "hash", Perfil.ADMIN, true));
+        JwtProperties otherProperties = new JwtProperties();
+        otherProperties.setSecret("b3V0cm8tc2VncmVkby1kZS10ZXN0ZS1jb20tbWFpcy1kZS0zMi1ieXRlcw==");
+
+        assertThatThrownBy(() -> new JwtService(otherProperties).getClaims(token))
+                .isInstanceOf(JwtException.class);
+    }
+
+    @Test
     void rejeitaTokenExpirado() {
         JwtService expiredService = service(Duration.ofSeconds(-1));
         String token = expiredService.generateToken(new Usuario("Ana", "ana@senac.br", "hash", Perfil.ADMIN, true));

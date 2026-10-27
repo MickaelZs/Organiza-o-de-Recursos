@@ -1,22 +1,22 @@
 # Status dos requisitos
 
-RF-01 está **EM IMPLEMENTAÇÃO**: modelo de usuários/perfis, login JWT e autenticação stateless foram criados. A matriz completa de autorização dos endpoints futuros permanece pendente. RF-02 a RF-14 estão **NÃO IMPLEMENTADO**.
+RF-01 esta **EM IMPLEMENTACAO**: usuario/perfis, BCrypt, login JWT, autenticacao stateless e a matriz verificavel dos endpoints existentes foram implementados. A autorizacao completa por papel permanece pendente porque os endpoints de negocio futuros ainda nao existem. RF-02 a RF-14 estao **NAO IMPLEMENTADO**.
 
-Um requisito somente poderá ser marcado como concluído após: (1) implementação, (2) teste correspondente, (3) teste verde, (4) evidência e (5) atualização da RTM.
+Um requisito somente podera ser marcado como concluido apos: (1) implementacao, (2) teste correspondente, (3) teste verde, (4) evidencia e (5) atualizacao da RTM.
 
 | Requisito | Status |
 |---|---|
-| RF-01 | EM IMPLEMENTAÇÃO |
-| RF-02 | NÃO IMPLEMENTADO |
-| RF-03 | NÃO IMPLEMENTADO |
-| RF-04 | NÃO IMPLEMENTADO |
-| RF-05 | NÃO IMPLEMENTADO |
-| RF-06 | NÃO IMPLEMENTADO |
-| RF-07 | NÃO IMPLEMENTADO |
-| RF-08 | NÃO IMPLEMENTADO |
-| RF-09 | NÃO IMPLEMENTADO |
-| RF-10 | NÃO IMPLEMENTADO |
-| RF-11 | NÃO IMPLEMENTADO |
-| RF-12 | NÃO IMPLEMENTADO |
-| RF-13 | NÃO IMPLEMENTADO |
-| RF-14 | NÃO IMPLEMENTADO |
+| RF-01 | EM IMPLEMENTACAO |
+| RF-02 | NAO IMPLEMENTADO |
+| RF-03 | NAO IMPLEMENTADO |
+| RF-04 | NAO IMPLEMENTADO |
+| RF-05 | NAO IMPLEMENTADO |
+| RF-06 | NAO IMPLEMENTADO |
+| RF-07 | NAO IMPLEMENTADO |
+| RF-08 | NAO IMPLEMENTADO |
+| RF-09 | NAO IMPLEMENTADO |
+| RF-10 | NAO IMPLEMENTADO |
+| RF-11 | NAO IMPLEMENTADO |
+| RF-12 | NAO IMPLEMENTADO |
+| RF-13 | NAO IMPLEMENTADO |
+| RF-14 | NAO IMPLEMENTADO |

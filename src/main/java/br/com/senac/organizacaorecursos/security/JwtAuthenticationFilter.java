@@ -28,6 +28,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims claims = jwtService.getClaims(header.substring(7));
                 Perfil perfil = Perfil.valueOf(claims.get("perfil", String.class));
+                String subject = claims.getSubject();
+                if (subject == null || subject.isBlank()) {
+                    throw new IllegalArgumentException("JWT sem subject");
+                }
                 var authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null,
                         java.util.List.of(new SimpleGrantedAuthority("ROLE_" + perfil.name())));
                 SecurityContextHolder.getContext().setAuthentication(authentication);

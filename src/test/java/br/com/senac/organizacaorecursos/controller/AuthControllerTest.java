@@ -58,4 +58,21 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Credenciais inválidas."));
     }
+    @Test
+    void rejeitaPayloadInvalido() throws Exception {
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"email-invalido\",\"senha\":\"\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void respostaDeLoginNuncaIncluiSenhaOuHash() throws Exception {
+        when(authService.login("ana@senac.br", "senha-correta")).thenReturn("jwt-valido");
+
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"ana@senac.br\",\"senha\":\"senha-correta\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.senha").doesNotExist())
+                .andExpect(jsonPath("$.hash").doesNotExist());
+    }
 }

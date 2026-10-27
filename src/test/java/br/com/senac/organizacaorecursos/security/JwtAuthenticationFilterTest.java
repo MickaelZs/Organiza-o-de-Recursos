@@ -31,4 +31,42 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
                 .extracting("authority").containsExactly("ROLE_RESPONSAVEL");
     }
+
+    @Test
+    void rejeitaTokenSemPerfilObrigatorio() throws Exception {
+        JwtProperties properties = properties();
+        String token = io.jsonwebtoken.Jwts.builder().subject("ana@senac.br")
+                .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(
+                        io.jsonwebtoken.io.Decoders.BASE64.decode(properties.getSecret())))
+                .compact();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + token);
+
+        new JwtAuthenticationFilter(new JwtService(properties)).doFilter(
+                request, new MockHttpServletResponse(), new MockFilterChain());
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void rejeitaTokenSemSubjectObrigatorio() throws Exception {
+        JwtProperties properties = properties();
+        String token = io.jsonwebtoken.Jwts.builder().claim("perfil", "ADMIN")
+                .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(
+                        io.jsonwebtoken.io.Decoders.BASE64.decode(properties.getSecret())))
+                .compact();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + token);
+
+        new JwtAuthenticationFilter(new JwtService(properties)).doFilter(
+                request, new MockHttpServletResponse(), new MockFilterChain());
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    private JwtProperties properties() {
+        JwtProperties properties = new JwtProperties();
+        properties.setSecret("dGVzdC1qd3Qtc2VjcmV0LXdpdGgtYXQtbGVhc3QtMzItYnl0ZXMtbG9uZw==");
+        return properties;
+    }
 }
