@@ -3,7 +3,7 @@
 | Requisito | Risco | Implementacao | Teste | Evidencia | Status |
 |---|---|---|---|---|---|
 | RF-01 | Autenticacao indevida, token invalido e acesso nao autenticado | Usuario/Perfil, BCrypt, login JWT stateless, filtro JWT, 401 para ausencia/token invalido/expirado e matriz de autorizacao | `AuthServiceTest`, `AuthControllerTest`, `PasswordEncoderTest`, `JwtServiceTest`, `JwtAuthenticationFilterTest`, `SecurityAuthorizationIntegrationTest`, `UsuarioRepositoryPostgresTest` | Testes sem Docker devem ser executados; o teste PostgreSQL requer Docker/Testcontainers | EM IMPLEMENTACAO |
-| RF-02 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
+| RF-02 | Cadastro indevido e dados invalidos de sala | Sala, migration Flyway, DTOs, repository, API e autorizacao ADMIN para cadastro | `SalaAuthorizationIntegrationTest`, `SalaRepositoryPostgresTest` | Testes criados; execucao depende da compilacao de testes e Docker/Testcontainers | EM IMPLEMENTACAO |
 | RF-03 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
 | RF-04 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
 | RF-05 | Pendente | pendente | pendente | pendente | NAO IMPLEMENTADO |
