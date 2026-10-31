@@ -27,7 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = jwtService.getClaims(header.substring(7));
-                Perfil perfil = Perfil.valueOf(claims.get("perfil", String.class));
+                String perfilClaim = claims.get("perfil", String.class);
+                if (perfilClaim == null || perfilClaim.isBlank()) {
+                    throw new IllegalArgumentException("JWT sem perfil");
+                }
+                Perfil perfil = Perfil.valueOf(perfilClaim);
                 String subject = claims.getSubject();
                 if (subject == null || subject.isBlank()) {
                     throw new IllegalArgumentException("JWT sem subject");
