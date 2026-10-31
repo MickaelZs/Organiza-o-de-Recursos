@@ -8,10 +8,14 @@ import br.com.senac.organizacaorecursos.config.JwtProperties;
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Usuario;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
+import br.com.senac.organizacaorecursos.repository.MaterialRepository;
+import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
+import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
 import java.time.Duration;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +24,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SecurityAuthorizationIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
@@ -34,6 +40,15 @@ class SecurityAuthorizationIntegrationTest {
 
     @MockBean
     private UsuarioRepository usuarioRepository;
+
+    @MockBean
+    private SalaRepository salaRepository;
+
+    @MockBean
+    private ProfessorRepository professorRepository;
+
+    @MockBean
+    private MaterialRepository materialRepository;
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("operacoesPublicas")
@@ -49,7 +64,7 @@ class SecurityAuthorizationIntegrationTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("credenciaisInvalidas")
     void rejeitaCredenciaisInvalidasEmRotaProtegida(String descricao, String authorization) throws Exception {
-        mockMvc.perform(get("/api/inexistente").header("Authorization", authorization))
+        mockMvc.perform(comAutorizacao(get("/api/inexistente"), authorization))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -82,5 +97,9 @@ class SecurityAuthorizationIntegrationTest {
 
     private static Stream<Perfil> perfis() {
         return Stream.of(Perfil.SOLICITANTE, Perfil.RESPONSAVEL, Perfil.ADMIN);
+    }
+
+    private MockHttpServletRequestBuilder comAutorizacao(MockHttpServletRequestBuilder request, String authorization) {
+        return authorization == null ? request : request.header("Authorization", authorization);
     }
 }

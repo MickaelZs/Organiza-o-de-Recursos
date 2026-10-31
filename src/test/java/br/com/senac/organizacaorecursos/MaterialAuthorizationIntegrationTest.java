@@ -11,6 +11,8 @@ import br.com.senac.organizacaorecursos.entity.Material;
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Usuario;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
+import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
+import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,11 +31,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MaterialAuthorizationIntegrationTest {
     private static final String PAYLOAD_VALIDO = """
             {"nome":"Projetor","tipo":"Equipamento","quantidadeTotal":5,
@@ -50,6 +55,12 @@ class MaterialAuthorizationIntegrationTest {
 
     @MockBean
     private MaterialRepository materialRepository;
+
+    @MockBean
+    private SalaRepository salaRepository;
+
+    @MockBean
+    private ProfessorRepository professorRepository;
 
     @BeforeEach
     void prepararRepositorio() {
@@ -75,8 +86,8 @@ class MaterialAuthorizationIntegrationTest {
     @ParameterizedTest(name = "{0} recebe {2} ao cadastrar material")
     @MethodSource("cenariosCadastro")
     void aplicaAutorizacaoNoCadastro(String descricao, String authorization, int statusEsperado) throws Exception {
-        mockMvc.perform(post("/api/materiais").header("Authorization", authorization)
-                        .contentType(MediaType.APPLICATION_JSON).content(PAYLOAD_VALIDO))
+        mockMvc.perform(comAutorizacao(post("/api/materiais")
+                        .contentType(MediaType.APPLICATION_JSON).content(PAYLOAD_VALIDO), authorization))
                 .andExpect(status().is(statusEsperado));
     }
 
@@ -84,7 +95,7 @@ class MaterialAuthorizationIntegrationTest {
     @MethodSource("cenariosConsulta")
     void permiteConsultaParaTodoPerfilAutenticado(String descricao, String authorization, int statusEsperado)
             throws Exception {
-        mockMvc.perform(get("/api/materiais").header("Authorization", authorization))
+        mockMvc.perform(comAutorizacao(get("/api/materiais"), authorization))
                 .andExpect(status().is(statusEsperado));
     }
 
@@ -140,5 +151,9 @@ class MaterialAuthorizationIntegrationTest {
 
     private String token(Perfil perfil) {
         return "Bearer " + jwtService.generateToken(new Usuario("Ana", "ana@senac.br", "hash", perfil, true));
+    }
+
+    private MockHttpServletRequestBuilder comAutorizacao(MockHttpServletRequestBuilder request, String authorization) {
+        return authorization == null ? request : request.header("Authorization", authorization);
     }
 }

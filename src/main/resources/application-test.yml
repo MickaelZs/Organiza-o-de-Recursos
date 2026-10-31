@@ -12,3 +12,8 @@ spring:
 app:
   jwt:
     secret: dGVzdC1qd3Qtc2VjcmV0LXdpdGgtYXQtbGVhc3QtMzItYnl0ZXMtbG9uZw==
+
+# Evita que um DEBUG global do ambiente imprima propriedades sensiveis de teste.
+logging:
+  level:
+    org.springframework.boot.env.OriginTrackedYamlLoader: INFO

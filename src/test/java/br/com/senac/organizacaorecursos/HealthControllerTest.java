@@ -11,6 +11,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import br.com.senac.organizacaorecursos.repository.MaterialRepository;
+import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
+import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 
 @SpringBootTest
@@ -19,6 +22,15 @@ import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 class HealthControllerTest {
     @MockBean
     private UsuarioRepository usuarioRepository;
+
+    @MockBean
+    private SalaRepository salaRepository;
+
+    @MockBean
+    private ProfessorRepository professorRepository;
+
+    @MockBean
+    private MaterialRepository materialRepository;
 
     @Autowired
     private MockMvc mockMvc;
