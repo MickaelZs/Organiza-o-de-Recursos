@@ -1,0 +1,4 @@
+app:
+  jwt:
+    # Chave fictícia exclusiva para testes automatizados; 43 bytes após Base64.
+    secret: dGVzdC1qd3Qtc2VjcmV0LXdpdGgtYXQtbGVhc3QtMzItYnl0ZXMtbG9uZw==

@@ -6,11 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import br.com.senac.organizacaorecursos.entity.Professor;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import jakarta.validation.ConstraintViolationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -18,6 +20,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
+@ActiveProfiles("postgres-test")
 @Testcontainers
 class ProfessorRepositoryPostgresTest {
     @Container
@@ -38,6 +41,11 @@ class ProfessorRepositoryPostgresTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void limpaProfessoresEntreTestes() {
+        professorRepository.deleteAll();
+    }
 
     @Test
     void persisteProfessorComCompetenciaComoTexto() {

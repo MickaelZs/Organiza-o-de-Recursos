@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,10 +32,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("postgres-test")
 @Testcontainers
 class ResourceSearchApiPostgresTest {
-    private static final String JWT_SECRET = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
-
     @Container
     static final PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("organizacao_recursos_test")
@@ -46,7 +46,6 @@ class ResourceSearchApiPostgresTest {
         registry.add("spring.datasource.url", postgresql::getJdbcUrl);
         registry.add("spring.datasource.username", postgresql::getUsername);
         registry.add("spring.datasource.password", postgresql::getPassword);
-        registry.add("app.jwt.secret", () -> JWT_SECRET);
     }
 
     @Autowired
@@ -85,7 +84,8 @@ class ResourceSearchApiPostgresTest {
 
     @Test
     void combinaFiltrosDeSalaComCapacidadeMinima() throws Exception {
-        mockMvc.perform(get("/api/salas?tipo=laboratorio&capacidadeMinima=30&localizacao=bloco%20a")
+        mockMvc.perform(get("/api/salas").param("tipo", "laboratorio")
+                        .param("capacidadeMinima", "30").param("localizacao", "bloco a")
                         .header("Authorization", token(Perfil.SOLICITANTE)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -122,7 +122,8 @@ class ResourceSearchApiPostgresTest {
 
     @Test
     void combinaFiltrosDeMaterial() throws Exception {
-        mockMvc.perform(get("/api/materiais?tipo=equipamento&localizacao=bloco%20a")
+        mockMvc.perform(get("/api/materiais").param("tipo", "equipamento")
+                        .param("localizacao", "bloco a")
                         .header("Authorization", token(Perfil.SOLICITANTE)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
