@@ -8,21 +8,21 @@ Os endpoints abaixo existem nesta etapa. A configuracao real do Spring Security 
 |---|---|---|---|---|---|
 | `GET /api/health` | 200 | 200 | 200 | 200 | `permiteOperacoesPublicasSemToken` (health sem token) |
 | `POST /api/auth/login` | Endpoint acessivel; 2xx com credencial valida / 400 com payload invalido | Mesmo comportamento | Mesmo comportamento | Mesmo comportamento | `permiteOperacoesPublicasSemToken` e `AuthControllerTest` |
-| `GET /api/salas` | 401 | 200 | 200 | 200 | `SalaAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `GET /api/salas/{id}` | 401 | 200/404 | 200/404 | 200/404 | `SalaAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `POST /api/salas` | 401 | 403 | 403 | 201 com payload valido; 400 com payload invalido | `SalaAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `GET /api/professores` | 401 | 200 | 200 | 200 | `ProfessorAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `GET /api/professores/{id}` | 401 | 200/404 | 200/404 | 200/404 | `ProfessorAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `POST /api/professores` | 401 | 403 | 403 | 201 com payload valido; 400 com payload invalido; 409 para e-mail duplicado | `ProfessorAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `GET /api/materiais` | 401 | 200 | 200 | 200 | `MaterialAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `GET /api/salas` com filtros `tipo`, `capacidadeMinima`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`; teste criado, execucao pendente por `testCompile` e Docker/Testcontainers |
-| `GET /api/professores` com filtro `competencia` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`; teste criado, execucao pendente por `testCompile` e Docker/Testcontainers |
-| `GET /api/materiais` com filtros `tipo`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`; teste criado, execucao pendente por `testCompile` e Docker/Testcontainers |
-| `GET /api/materiais/{id}` | 401 | 200/404 | 200/404 | 200/404 | `MaterialAuthorizationIntegrationTest`; teste criado, execucao pendente |
-| `POST /api/materiais` | 401 | 403 | 403 | 201 com payload valido; 400 para quantidade/payload invalido | `MaterialAuthorizationIntegrationTest`; teste criado, execucao pendente |
+| `GET /api/salas` | 401 | 200 | 200 | 200 | `SalaAuthorizationIntegrationTest`: 11 testes executados, 0 falhas/erros |
+| `GET /api/salas/{id}` | 401 | 200/404 | 200/404 | 200/404 | `SalaAuthorizationIntegrationTest`: executado |
+| `POST /api/salas` | 401 | 403 | 403 | 201 com payload valido; 400 com payload invalido | `SalaAuthorizationIntegrationTest`: executado |
+| `GET /api/professores` | 401 | 200 | 200 | 200 | `ProfessorAuthorizationIntegrationTest`: 12 testes executados, 0 falhas/erros |
+| `GET /api/professores/{id}` | 401 | 200/404 | 200/404 | 200/404 | `ProfessorAuthorizationIntegrationTest`: executado |
+| `POST /api/professores` | 401 | 403 | 403 | 201 com payload valido; 400 com payload invalido; 409 para e-mail duplicado | `ProfessorAuthorizationIntegrationTest`: executado |
+| `GET /api/materiais` | 401 | 200 | 200 | 200 | `MaterialAuthorizationIntegrationTest`: 13 testes executados, 0 falhas/erros |
+| `GET /api/salas` com filtros `tipo`, `capacidadeMinima`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: 19 testes executados na suite final, 0 falhas/erros |
+| `GET /api/professores` com filtro `competencia` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: executado na suite final |
+| `GET /api/materiais` com filtros `tipo`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: executado na suite final |
+| `GET /api/materiais/{id}` | 401 | 200/404 | 200/404 | 200/404 | `MaterialAuthorizationIntegrationTest`: executado |
+| `POST /api/materiais` | 401 | 403 | 403 | 201 com payload valido; 400 para quantidade/payload invalido | `MaterialAuthorizationIntegrationTest`: executado |
 | Qualquer rota ainda nao publicada, por exemplo `GET /api/inexistente` | 401 sem token, malformado ou expirado | 404 com JWT valido (a autenticacao passou; a rota nao existe) | 404 com JWT valido (a autenticacao passou; a rota nao existe) | 404 com JWT valido (a autenticacao passou; a rota nao existe) | `SecurityAuthorizationIntegrationTest` |
 
-`POST /api/salas`, `POST /api/professores` e `POST /api/materiais` sao operacoes reais com regra de papel: somente ADMIN possui `ROLE_ADMIN`. A evidencia automatizada foi criada, mas ainda nao deve ser considerada executada enquanto a pendencia de `testCompile` persistir.
+`POST /api/salas`, `POST /api/professores` e `POST /api/materiais` sao operacoes reais com regra de papel: somente ADMIN possui `ROLE_ADMIN`. A suite final `clean verify` executou 93 testes com 0 falhas, 0 erros e 0 ignorados, incluindo PostgreSQL/Testcontainers 1.21.4 e Flyway V1-V5. As regras futuras de ownership de reservas nao pertencem a esta etapa.
 
 ## Matriz planejada
 
