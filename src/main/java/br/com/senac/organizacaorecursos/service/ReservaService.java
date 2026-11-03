@@ -111,11 +111,11 @@ public class ReservaService {
 
     private Recurso resolverRecurso(ReservaRequest request) {
         Sala sala = request.salaId() == null ? null
-                : salaRepository.findById(request.salaId()).orElseThrow(SalaNotFoundException::new);
+                : salaRepository.findByIdParaReserva(request.salaId()).orElseThrow(SalaNotFoundException::new);
         Professor professor = request.professorId() == null ? null
-                : professorRepository.findById(request.professorId()).orElseThrow(ProfessorNotFoundException::new);
+                : professorRepository.findByIdParaReserva(request.professorId()).orElseThrow(ProfessorNotFoundException::new);
         Material material = request.materialId() == null ? null
-                : materialRepository.findById(request.materialId()).orElseThrow(MaterialNotFoundException::new);
+                : materialRepository.findByIdParaReserva(request.materialId()).orElseThrow(MaterialNotFoundException::new);
         return new Recurso(sala, professor, material);
     }
 
