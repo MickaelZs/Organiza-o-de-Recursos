@@ -5,12 +5,19 @@ import br.com.senac.organizacaorecursos.entity.StatusReserva;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findAllBySolicitante_Id(Long solicitanteId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select reserva from Reserva reserva where reserva.id = :id")
+    Optional<Reserva> findByIdParaAtualizacao(@Param("id") Long id);
 
     @Query("""
             select case when count(r) > 0 then true else false end

@@ -48,7 +48,7 @@ public class ReservaService {
         var recurso = resolverRecurso(request);
         verificarConflito(recurso, request, null);
         return reservaRepository.save(new Reserva(solicitante, recurso.sala(), recurso.professor(), recurso.material(),
-                request.inicio(), request.termino(), StatusReserva.SOLICITADA));
+                request.inicio(), request.termino(), statusInicial(recurso)));
     }
 
     @Transactional(readOnly = true)
@@ -71,13 +71,35 @@ public class ReservaService {
     @Transactional
     public Reserva atualizar(Long id, String emailAutenticado, ReservaRequest request) {
         Usuario usuario = usuarioSolicitante(emailAutenticado);
-        Reserva reserva = reservaRepository.findById(id).orElseThrow(ReservaNotFoundException::new);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
         var recurso = resolverRecurso(request);
         if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(reserva.getStatus())) {
             verificarConflito(recurso, request, reserva.getId());
         }
-        reserva.atualizar(recurso.sala(), recurso.professor(), recurso.material(), request.inicio(), request.termino());
+        StatusReserva status = reserva.getStatus() == StatusReserva.SOLICITADA
+                || reserva.getStatus() == StatusReserva.APROVADA ? statusInicial(recurso) : reserva.getStatus();
+        reserva.atualizar(recurso.sala(), recurso.professor(), recurso.material(), request.inicio(), request.termino(), status);
+        return reservaRepository.save(reserva);
+    }
+
+    @Transactional
+    public Reserva aprovar(Long id, String emailAutenticado) {
+        usuarioResponsavel(emailAutenticado);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
+        validarSolicitacaoRestritaPendente(reserva);
+        Recurso recurso = bloquearRecursoDaReserva(reserva);
+        verificarConflito(recurso, reserva.getInicio(), reserva.getTermino(), reserva.getId());
+        reserva.aprovar();
+        return reservaRepository.save(reserva);
+    }
+
+    @Transactional
+    public Reserva rejeitar(Long id, String emailAutenticado) {
+        usuarioResponsavel(emailAutenticado);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
+        validarSolicitacaoRestritaPendente(reserva);
+        reserva.rejeitar();
         return reservaRepository.save(reserva);
     }
 
@@ -101,6 +123,39 @@ public class ReservaService {
         return usuario;
     }
 
+    private void usuarioResponsavel(String email) {
+        Usuario usuario = usuarioAtivo(email);
+        if (usuario.getPerfil() != Perfil.RESPONSAVEL) throw new ReservaAprovacaoNaoPermitidaException();
+    }
+
+    private void validarSolicitacaoRestritaPendente(Reserva reserva) {
+        if (reserva.getStatus() != StatusReserva.SOLICITADA || !reserva.envolveRecursoRestrito()) {
+            throw new ReservaEstadoInvalidoException();
+        }
+    }
+
+    private StatusReserva statusInicial(Recurso recurso) {
+        boolean restrito = recurso.sala() != null && Boolean.TRUE.equals(recurso.sala().getRestrita())
+                || recurso.material() != null && Boolean.TRUE.equals(recurso.material().getRestrito());
+        return restrito ? StatusReserva.SOLICITADA : StatusReserva.APROVADA;
+    }
+
+    private Recurso bloquearRecursoDaReserva(Reserva reserva) {
+        if (reserva.getSala() != null) {
+            Sala sala = salaRepository.findByIdParaReserva(reserva.getSala().getId())
+                    .orElseThrow(SalaNotFoundException::new);
+            return new Recurso(sala, null, null);
+        }
+        if (reserva.getProfessor() != null) {
+            Professor professor = professorRepository.findByIdParaReserva(reserva.getProfessor().getId())
+                    .orElseThrow(ProfessorNotFoundException::new);
+            return new Recurso(null, professor, null);
+        }
+        Material material = materialRepository.findByIdParaReserva(reserva.getMaterial().getId())
+                .orElseThrow(MaterialNotFoundException::new);
+        return new Recurso(null, null, material);
+    }
+
     private void verificarConsultaPermitida(Reserva reserva, Usuario usuario) {
         if (usuario.getPerfil() == Perfil.SOLICITANTE) verificarProprietario(reserva, usuario);
     }
@@ -120,11 +175,16 @@ public class ReservaService {
     }
 
     private void verificarConflito(Recurso recurso, ReservaRequest request, Long idExcluido) {
+        verificarConflito(recurso, request.inicio(), request.termino(), idExcluido);
+    }
+
+    private void verificarConflito(Recurso recurso, java.time.OffsetDateTime inicio,
+                                   java.time.OffsetDateTime termino, Long idExcluido) {
         Long salaId = recurso.sala() == null ? null : recurso.sala().getId();
         Long professorId = recurso.professor() == null ? null : recurso.professor().getId();
         Long materialId = recurso.material() == null ? null : recurso.material().getId();
         if (reservaRepository.existsConflito(salaId, professorId, materialId,
-                request.inicio(), request.termino(), STATUS_QUE_BLOQUEIAM_HORARIO, idExcluido)) {
+                inicio, termino, STATUS_QUE_BLOQUEIAM_HORARIO, idExcluido)) {
             throw new ReservaConflitoException();
         }
     }

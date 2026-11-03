@@ -79,12 +79,28 @@ public class Reserva {
     }
 
     public void atualizar(Sala sala, Professor professor, Material material,
-                          OffsetDateTime inicio, OffsetDateTime termino) {
+                          OffsetDateTime inicio, OffsetDateTime termino, StatusReserva status) {
         this.sala = sala;
         this.professor = professor;
         this.material = material;
         this.inicio = inicio;
         this.termino = termino;
+        this.status = status;
+    }
+
+    public boolean envolveRecursoRestrito() {
+        return (sala != null && Boolean.TRUE.equals(sala.getRestrita()))
+                || (material != null && Boolean.TRUE.equals(material.getRestrito()));
+    }
+
+    public void aprovar() {
+        if (status != StatusReserva.SOLICITADA) throw new IllegalStateException("Reserva fora de SOLICITADA");
+        status = StatusReserva.APROVADA;
+    }
+
+    public void rejeitar() {
+        if (status != StatusReserva.SOLICITADA) throw new IllegalStateException("Reserva fora de SOLICITADA");
+        status = StatusReserva.REJEITADA;
     }
 
     public void cancelar() {

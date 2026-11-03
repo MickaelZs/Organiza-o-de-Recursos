@@ -31,6 +31,16 @@ public class ReservaController {
         return ResponseEntity.created(URI.create("/api/reservas/" + response.id())).body(response);
     }
 
+    @PostMapping("/{id}/aprovar")
+    public ReservaResponse aprovar(@PathVariable Long id, Authentication authentication) {
+        return ReservaResponse.from(reservaService.aprovar(id, authentication.getName()));
+    }
+
+    @PostMapping("/{id}/rejeitar")
+    public ReservaResponse rejeitar(@PathVariable Long id, Authentication authentication) {
+        return ReservaResponse.from(reservaService.rejeitar(id, authentication.getName()));
+    }
+
     @GetMapping
     public List<ReservaResponse> listar(Authentication authentication) {
         return reservaService.listar(authentication.getName()).stream().map(ReservaResponse::from).toList();

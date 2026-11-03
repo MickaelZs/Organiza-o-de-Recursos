@@ -71,8 +71,10 @@ class ReservaApiPostgresTest {
     private Usuario responsavel;
     private Usuario admin;
     private Sala sala;
+    private Sala salaRestrita;
     private Professor professor;
     private Material material;
+    private Material materialRestrito;
 
     @BeforeEach
     void preparaBanco() {
@@ -86,21 +88,25 @@ class ReservaApiPostgresTest {
         responsavel = salvarUsuario("responsavel@senac.br", Perfil.RESPONSAVEL);
         admin = salvarUsuario("admin@senac.br", Perfil.ADMIN);
         sala = salaRepository.saveAndFlush(new Sala("Sala 1", "Aula", 30, "Bloco A", false, true));
+        salaRestrita = salaRepository.saveAndFlush(
+                new Sala("Sala restrita", "Restrita", 20, "Bloco B", true, true));
         professor = professorRepository.saveAndFlush(
                 new Professor("Carlos Souza", "carlos@senac.br", "Matematica", true));
         material = materialRepository.saveAndFlush(
                 new Material("Projetor", "Equipamento", 4, 4, "Almoxarifado", false, true));
+        materialRestrito = materialRepository.saveAndFlush(
+                new Material("Camera restrita", "Restrito", 1, 1, "Sala do Responsavel", true, true));
     }
 
     @Test
-    void criaReservaValidaComSolicitanteDoJwtEStatusSolicitada() throws Exception {
+    void criaReservaComumJaAprovadaComSolicitanteDoJwt() throws Exception {
         mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
                         .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.solicitanteId").value(solicitante.getId()))
                 .andExpect(jsonPath("$.salaId").value(sala.getId()))
                 .andExpect(jsonPath("$.professorId").doesNotExist())
-                .andExpect(jsonPath("$.status").value("SOLICITADA"));
+                .andExpect(jsonPath("$.status").value("APROVADA"));
     }
 
     @Test
@@ -132,7 +138,142 @@ class ReservaApiPostgresTest {
         mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
                         .contentType(MediaType.APPLICATION_JSON).content(pedidoMaterial()))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.materialId").value(material.getId()))
-                .andExpect(jsonPath("$.salaId").doesNotExist());
+                .andExpect(jsonPath("$.salaId").doesNotExist())
+                .andExpect(jsonPath("$.status").value("APROVADA"));
+    }
+
+    @Test
+    void solicitaAprovacaoParaSalaEMaterialRestritos() throws Exception {
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", salaRestrita.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("SOLICITADA"));
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("materialId", materialRestrito.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("SOLICITADA"));
+    }
+
+    @Test
+    void somenteResponsavelPodeAprovarSolicitacaoRestrita() throws Exception {
+        Reserva pendente = criarReservaRestrita();
+
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/aprovar")
+                        .header("Authorization", token(solicitante)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/aprovar")
+                        .header("Authorization", token(admin)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/rejeitar")
+                        .header("Authorization", token(solicitante)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/rejeitar")
+                        .header("Authorization", token(admin)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/aprovar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APROVADA"));
+
+        var respostaMaterial = mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("materialId", materialRestrito.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("SOLICITADA"))
+                .andReturn();
+        Number idMaterial = com.jayway.jsonpath.JsonPath.read(
+                respostaMaterial.getResponse().getContentAsString(), "$.id");
+        mockMvc.perform(post("/api/reservas/" + idMaterial.longValue() + "/aprovar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.materialId").value(materialRestrito.getId()))
+                .andExpect(jsonPath("$.status").value("APROVADA"));
+    }
+
+    @Test
+    void rejeicaoDeSolicitacaoRestritaLiberaConflitoEDisponibilidade() throws Exception {
+        Reserva pendente = criarReservaRestrita();
+        mockMvc.perform(get("/api/salas").param("tipo", "restrita")
+                        .param("inicio", "2026-11-03T09:00:00-03:00")
+                        .param("termino", "2026-11-03T10:00:00-03:00")
+                        .header("Authorization", token(solicitante)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", salaRestrita.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/rejeitar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJEITADA"));
+        mockMvc.perform(get("/api/salas").param("tipo", "restrita")
+                        .param("inicio", "2026-11-03T09:00:00-03:00")
+                        .param("termino", "2026-11-03T10:00:00-03:00")
+                        .header("Authorization", token(solicitante)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", salaRestrita.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("SOLICITADA"));
+    }
+
+    @Test
+    void retorna404ParaAprovacaoOuRejeicaoInexistente() throws Exception {
+        mockMvc.perform(post("/api/reservas/999/aprovar").header("Authorization", token(responsavel)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/reservas/999/rejeitar").header("Authorization", token(responsavel)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void rejeitaTransicoesDeAprovacaoInvalidas() throws Exception {
+        Reserva comum = criarReservaComum();
+        mockMvc.perform(post("/api/reservas/" + comum.getId() + "/aprovar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isConflict());
+        mockMvc.perform(post("/api/reservas/" + comum.getId() + "/rejeitar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isConflict());
+
+        Reserva rejeitada = criarReservaRestrita();
+        mockMvc.perform(post("/api/reservas/" + rejeitada.getId() + "/rejeitar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/reservas/" + rejeitada.getId() + "/aprovar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void aprovacaoRevalidaConflitoAntesDeConfirmar() throws Exception {
+        Reserva pendente = criarReservaRestrita();
+        reservaRepository.saveAndFlush(new Reserva(solicitante, salaRestrita, null, null,
+                OffsetDateTime.parse("2026-11-03T09:30:00-03:00"),
+                OffsetDateTime.parse("2026-11-03T10:30:00-03:00"), StatusReserva.APROVADA));
+
+        mockMvc.perform(post("/api/reservas/" + pendente.getId() + "/aprovar")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isConflict());
+        mockMvc.perform(get("/api/reservas/" + pendente.getId()).header("Authorization", token(responsavel)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SOLICITADA"));
+    }
+
+    @Test
+    void alterarReservaReavaliaSeORecursoExigeAprovacao() throws Exception {
+        Reserva comum = criarReservaComum();
+        mockMvc.perform(put("/api/reservas/" + comum.getId()).header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", salaRestrita.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SOLICITADA"));
     }
 
     @Test
@@ -320,6 +461,18 @@ class ReservaApiPostgresTest {
 
     private Reserva salvarReserva(Usuario dono, Sala reservaSala, Professor reservaProfessor, Material reservaMaterial) {
         return salvarReserva(dono, reservaSala, reservaProfessor, reservaMaterial, StatusReserva.SOLICITADA);
+    }
+
+    private Reserva criarReservaRestrita() {
+        return reservaRepository.saveAndFlush(new Reserva(solicitante, salaRestrita, null, null,
+                OffsetDateTime.parse("2026-11-03T09:00:00-03:00"),
+                OffsetDateTime.parse("2026-11-03T10:00:00-03:00"), StatusReserva.SOLICITADA));
+    }
+
+    private Reserva criarReservaComum() {
+        return reservaRepository.saveAndFlush(new Reserva(solicitante, sala, null, null,
+                OffsetDateTime.parse("2026-11-03T09:00:00-03:00"),
+                OffsetDateTime.parse("2026-11-03T10:00:00-03:00"), StatusReserva.APROVADA));
     }
 
     private Reserva salvarReserva(Usuario dono, Sala reservaSala, Professor reservaProfessor, Material reservaMaterial,
