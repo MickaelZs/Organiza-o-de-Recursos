@@ -10,7 +10,8 @@ As rotas de consulta exigem um JWT valido. Sem parametros, mantem o comportament
 | `GET /api/professores` | `competencia` | Trecho da competencia, sem diferenca entre maiusculas e minusculas. |
 | `GET /api/materiais` | `tipo` | Trecho do tipo, sem diferenca entre maiusculas e minusculas. |
 | `GET /api/materiais` | `localizacao` | Trecho da localizacao, sem diferenca entre maiusculas e minusculas. |
+| `GET /api/salas`, `/api/professores`, `/api/materiais` | `inicio` e `termino` | Intervalo ISO-8601 com offset; devem ser informados juntos e `termino` deve ser posterior a `inicio`. |
 
 Os parametros podem ser combinados nas buscas de Sala e Material; todos os criterios informados devem corresponder. Uma busca valida sem resultado retorna `200 OK` com uma colecao vazia. `404 Not Found` permanece reservado para consulta individual por identificador inexistente.
 
-Disponibilidade temporal nao e um filtro desta API. Ela depende do intervalo solicitado e de reservas/conflitos futuros (RF-04/RF-05), alem de manutencao no RF-08; `ativo` nao e usado como sinonimo de disponibilidade.
+Quando `inicio` e `termino` sao informados juntos, cada busca exclui recursos com reserva bloqueante sobreposta ao intervalo. Sem os dois parametros, a busca mantém a listagem estrutural. A consulta considera as reservas e os estados bloqueantes definidos para RF-05; manutencao (RF-08) ainda não é considerada. `ativo` não é usado como sinonimo de disponibilidade.

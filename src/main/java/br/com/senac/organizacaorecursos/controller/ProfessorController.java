@@ -6,6 +6,7 @@ import br.com.senac.organizacaorecursos.service.ProfessorService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.time.OffsetDateTime;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/professores")
@@ -31,8 +33,13 @@ public class ProfessorController {
     }
 
     @GetMapping
-    public List<ProfessorResponse> listar(@RequestParam(required = false) String competencia) {
-        return professorService.buscarPorCompetencia(competencia).stream().map(ProfessorResponse::from).toList();
+    public List<ProfessorResponse> listar(@RequestParam(required = false) String competencia,
+                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                  OffsetDateTime inicio,
+                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                  OffsetDateTime termino) {
+        return professorService.buscarPorCompetencia(competencia, inicio, termino)
+                .stream().map(ProfessorResponse::from).toList();
     }
 
     @GetMapping("/{id}")

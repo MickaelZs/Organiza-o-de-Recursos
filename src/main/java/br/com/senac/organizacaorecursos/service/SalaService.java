@@ -5,6 +5,7 @@ import br.com.senac.organizacaorecursos.entity.Sala;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import java.util.List;
 import java.util.Locale;
+import java.time.OffsetDateTime;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,13 @@ public class SalaService {
 
     @Transactional(readOnly = true)
     public List<Sala> buscar(String tipo, Integer capacidadeMinima, String localizacao) {
+        return buscar(tipo, capacidadeMinima, localizacao, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Sala> buscar(String tipo, Integer capacidadeMinima, String localizacao,
+                             OffsetDateTime inicio, OffsetDateTime termino) {
+        validarIntervalo(inicio, termino);
         Specification<Sala> filtros = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
         if (temTexto(tipo)) {
             filtros = filtros.and(contemIgnorandoMaiusculas("tipo", tipo));
@@ -41,7 +49,16 @@ public class SalaService {
         if (temTexto(localizacao)) {
             filtros = filtros.and(contemIgnorandoMaiusculas("localizacao", localizacao));
         }
+        if (inicio != null) {
+            filtros = filtros.and(DisponibilidadeSpecifications.disponivel("sala", inicio, termino));
+        }
         return salaRepository.findAll(filtros);
+    }
+
+    private void validarIntervalo(OffsetDateTime inicio, OffsetDateTime termino) {
+        if ((inicio == null) != (termino == null) || (inicio != null && !termino.isAfter(inicio))) {
+            throw new IntervaloDisponibilidadeInvalidoException();
+        }
     }
 
     @Transactional(readOnly = true)
