@@ -1,5 +1,7 @@
 # Matriz de autorizacao
 
+Revisada na auditoria final de 03/11/2026. `clean verify`: 147 testes, 0 falhas, 0 erros e 0 ignorados (BUILD SUCCESS). Os testes de JWT/autorização e reservas foram executados; os cenários com persistência usam PostgreSQL/Testcontainers. Detalhes de cobertura e migrations: `docs/rtm.md`.
+
 ## Matriz implementada
 
 Os endpoints abaixo existem nesta etapa. A configuracao real do Spring Security e exercitada por testes de integracao com `MockMvc`.
@@ -15,14 +17,14 @@ Os endpoints abaixo existem nesta etapa. A configuracao real do Spring Security 
 | `GET /api/professores/{id}` | 401 | 200/404 | 200/404 | 200/404 | `ProfessorAuthorizationIntegrationTest`: executado |
 | `POST /api/professores` | 401 | 403 | 403 | 201 com payload valido; 400 com payload invalido; 409 para e-mail duplicado | `ProfessorAuthorizationIntegrationTest`: executado |
 | `GET /api/materiais` | 401 | 200 | 200 | 200 | `MaterialAuthorizationIntegrationTest`: 13 testes executados, 0 falhas/erros |
-| `GET /api/salas` com filtros `tipo`, `capacidadeMinima`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: 19 testes executados na suite final, 0 falhas/erros |
-| `GET /api/professores` com filtro `competencia` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: executado na suite final |
-| `GET /api/materiais` com filtros `tipo`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: executado na suite final |
+| `GET /api/salas` com filtros `tipo`, `capacidadeMinima`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: 24 testes executados na suite final, 0 falhas/erros |
+| `GET /api/professores` com filtro `competencia` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: 24 testes executados na suite final, 0 falhas/erros |
+| `GET /api/materiais` com filtros `tipo`, `localizacao` | 401 | 200 | 200 | 200 | `ResourceSearchApiPostgresTest`: 24 testes executados na suite final, 0 falhas/erros |
 | `GET /api/materiais/{id}` | 401 | 200/404 | 200/404 | 200/404 | `MaterialAuthorizationIntegrationTest`: executado |
 | `POST /api/materiais` | 401 | 403 | 403 | 201 com payload valido; 400 para quantidade/payload invalido | `MaterialAuthorizationIntegrationTest`: executado |
-| `POST /api/reservas` | 401 | 201/400/404 | 403 | 403 | `ReservaApiPostgresTest`: criação, validação e referências; somente SOLICITANTE solicita |
-| `POST /api/reservas/{id}/aprovar` | 401 | 403 | 200/403/404/409 | 403 | `ReservaApiPostgresTest`: somente RESPONSAVEL aprova solicitação pendente de recurso restrito |
-| `POST /api/reservas/{id}/rejeitar` | 401 | 403 | 200/403/404/409 | 403 | `ReservaApiPostgresTest`: somente RESPONSAVEL rejeita solicitação pendente de recurso restrito |
+| `POST /api/reservas` | 401 | 201/400/404 | 403 | 403 | `ReservaApiPostgresTest` (33 testes): criação, validação, referências, conflitos e ownership; somente SOLICITANTE solicita |
+| `POST /api/reservas/{id}/aprovar` | 401 | 403 | 200/403/404/409 | 403 | `ReservaApiPostgresTest` (33 testes): somente RESPONSAVEL aprova solicitação pendente de recurso restrito; conflito revalidado |
+| `POST /api/reservas/{id}/rejeitar` | 401 | 403 | 200/403/404/409 | 403 | `ReservaApiPostgresTest` (33 testes): somente RESPONSAVEL rejeita solicitação pendente de recurso restrito |
 | `GET /api/reservas` | 401 | 200, somente próprias | 200, todas | 200, todas | `ReservaApiPostgresTest`: filtro por solicitante e consulta de equipe |
 | `GET /api/reservas/{id}` | 401 | 200 própria / 403 alheia / 404 inexistente | 200/404 | 200/404 | `ReservaApiPostgresTest`: ownership na consulta |
 | `PUT /api/reservas/{id}` | 401 | 200 própria / 403 alheia / 400 inválida / 404 inexistente | 403 | 403 | `ReservaApiPostgresTest`: alteração restrita ao solicitante proprietário |
