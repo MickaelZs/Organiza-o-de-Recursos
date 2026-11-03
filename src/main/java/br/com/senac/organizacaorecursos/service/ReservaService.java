@@ -13,12 +13,16 @@ import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.ReservaRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
+import java.util.EnumSet;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReservaService {
+    private static final List<StatusReserva> STATUS_QUE_BLOQUEIAM_HORARIO = List.copyOf(EnumSet.of(
+            StatusReserva.SOLICITADA, StatusReserva.APROVADA, StatusReserva.EM_USO, StatusReserva.CONCLUIDA));
+
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
     private final SalaRepository salaRepository;
@@ -42,6 +46,7 @@ public class ReservaService {
             throw new ReservaOwnershipException();
         }
         var recurso = resolverRecurso(request);
+        verificarConflito(recurso, request, null);
         return reservaRepository.save(new Reserva(solicitante, recurso.sala(), recurso.professor(), recurso.material(),
                 request.inicio(), request.termino(), StatusReserva.SOLICITADA));
     }
@@ -69,6 +74,9 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findById(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
         var recurso = resolverRecurso(request);
+        if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(reserva.getStatus())) {
+            verificarConflito(recurso, request, reserva.getId());
+        }
         reserva.atualizar(recurso.sala(), recurso.professor(), recurso.material(), request.inicio(), request.termino());
         return reservaRepository.save(reserva);
     }
@@ -109,6 +117,16 @@ public class ReservaService {
         Material material = request.materialId() == null ? null
                 : materialRepository.findById(request.materialId()).orElseThrow(MaterialNotFoundException::new);
         return new Recurso(sala, professor, material);
+    }
+
+    private void verificarConflito(Recurso recurso, ReservaRequest request, Long idExcluido) {
+        Long salaId = recurso.sala() == null ? null : recurso.sala().getId();
+        Long professorId = recurso.professor() == null ? null : recurso.professor().getId();
+        Long materialId = recurso.material() == null ? null : recurso.material().getId();
+        if (reservaRepository.existsConflito(salaId, professorId, materialId,
+                request.inicio(), request.termino(), STATUS_QUE_BLOQUEIAM_HORARIO, idExcluido)) {
+            throw new ReservaConflitoException();
+        }
     }
 
     private record Recurso(Sala sala, Professor professor, Material material) { }

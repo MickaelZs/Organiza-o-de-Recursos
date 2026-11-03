@@ -12,6 +12,7 @@ import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Professor;
 import br.com.senac.organizacaorecursos.entity.Reserva;
 import br.com.senac.organizacaorecursos.entity.Sala;
+import br.com.senac.organizacaorecursos.entity.StatusReserva;
 import br.com.senac.organizacaorecursos.entity.Usuario;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
@@ -22,6 +23,9 @@ import br.com.senac.organizacaorecursos.security.JwtService;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import java.util.stream.Stream;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,11 +45,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class ReservaApiPostgresTest {
     private static final String BCRYPT_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
-    private static final String PEDIDO_SALA = """
-            {"solicitanteId":999,"salaId":1,"inicio":"2026-11-03T09:00:00-03:00",
-             "termino":"2026-11-03T10:00:00-03:00"}
-            """;
-
     @Container
     static final PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("organizacao_recursos_test")
@@ -95,7 +95,7 @@ class ReservaApiPostgresTest {
     @Test
     void criaReservaValidaComSolicitanteDoJwtEStatusSolicitada() throws Exception {
         mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
-                        .contentType(MediaType.APPLICATION_JSON).content(PEDIDO_SALA))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.solicitanteId").value(solicitante.getId()))
                 .andExpect(jsonPath("$.salaId").value(sala.getId()))
@@ -105,13 +105,13 @@ class ReservaApiPostgresTest {
 
     @Test
     void rejeitaCriacaoAnonimaEPorPerfisSemPapelDeSolicitante() throws Exception {
-        mockMvc.perform(post("/api/reservas").contentType(MediaType.APPLICATION_JSON).content(PEDIDO_SALA))
+        mockMvc.perform(post("/api/reservas").contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/reservas").header("Authorization", token(responsavel))
-                        .contentType(MediaType.APPLICATION_JSON).content(PEDIDO_SALA))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/api/reservas").header("Authorization", token(admin))
-                        .contentType(MediaType.APPLICATION_JSON).content(PEDIDO_SALA))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isForbidden());
     }
 
@@ -144,6 +144,104 @@ class ReservaApiPostgresTest {
                 .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/reservas/999").header("Authorization", token(solicitante)))
                 .andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest
+    @MethodSource("intervalosSobrepostos")
+    void rejeitaSobreposicaoDeSalaCom409(String novoInicio, String novoTermino) throws Exception {
+        salvarReserva(solicitante, sala, null, null);
+
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", sala.getId(), novoInicio, novoTermino)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Horario indisponivel para o recurso."));
+    }
+
+    @Test
+    void permiteIntervalosAdjacentes() throws Exception {
+        salvarReserva(solicitante, sala, null, null);
+
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", sala.getId(), "2026-11-03T10:00:00-03:00",
+                                "2026-11-03T11:00:00-03:00")))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", sala.getId(), "2026-11-03T08:00:00-03:00",
+                                "2026-11-03T09:00:00-03:00")))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void detectaConflitosParaProfessorEMaterial() throws Exception {
+        salvarReserva(solicitante, null, professor, null);
+        salvarReserva(outroSolicitante, null, null, material);
+
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("professorId", professor.getId(), "2026-11-03T09:30:00-03:00",
+                                "2026-11-03T10:30:00-03:00")))
+                .andExpect(status().isConflict());
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("materialId", material.getId(), "2026-11-03T09:30:00-03:00",
+                                "2026-11-03T10:30:00-03:00")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void naoBloqueiaMesmoHorarioEmRecursosDiferentes() throws Exception {
+        salvarReserva(solicitante, sala, null, null);
+
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("professorId", professor.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("materialId", material.getId(), "2026-11-03T09:00:00-03:00",
+                                "2026-11-03T10:00:00-03:00")))
+                .andExpect(status().isCreated());
+    }
+
+    @ParameterizedTest
+    @MethodSource("statusesQueBloqueiam")
+    void statusAtivosBloqueiamHorario(StatusReserva status) throws Exception {
+        salvarReserva(solicitante, sala, null, null, status);
+
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(outroSolicitante))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
+                .andExpect(status().isConflict());
+    }
+
+    @ParameterizedTest
+    @MethodSource("statusesQueNaoBloqueiam")
+    void statusAlternativosNaoBloqueiamHorario(StatusReserva status) throws Exception {
+        salvarReserva(solicitante, sala, null, null, status);
+
+        mockMvc.perform(post("/api/reservas").header("Authorization", token(outroSolicitante))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void atualizarExcluiAPropriaReservaDaVerificacaoMasRejeitaConflitoComOutra() throws Exception {
+        Reserva propria = salvarReserva(solicitante, sala, null, null);
+        salvarReserva(outroSolicitante, sala, null, null, StatusReserva.SOLICITADA,
+                OffsetDateTime.parse("2026-11-03T10:00:00-03:00"),
+                OffsetDateTime.parse("2026-11-03T11:00:00-03:00"));
+
+        mockMvc.perform(put("/api/reservas/" + propria.getId()).header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/api/reservas/" + propria.getId()).header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(pedido("salaId", sala.getId(), "2026-11-03T10:30:00-03:00",
+                                "2026-11-03T11:30:00-03:00")))
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -184,10 +282,10 @@ class ReservaApiPostgresTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.professorId").value(professor.getId()))
                 .andExpect(jsonPath("$.salaId").doesNotExist());
         mockMvc.perform(put("/api/reservas/" + alheia.getId()).header("Authorization", token(solicitante))
-                        .contentType(MediaType.APPLICATION_JSON).content(PEDIDO_SALA))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isForbidden());
         mockMvc.perform(put("/api/reservas/" + propria.getId()).header("Authorization", token(admin))
-                        .contentType(MediaType.APPLICATION_JSON).content(PEDIDO_SALA))
+                        .contentType(MediaType.APPLICATION_JSON).content(pedidoSala()))
                 .andExpect(status().isForbidden());
     }
 
@@ -221,10 +319,20 @@ class ReservaApiPostgresTest {
     }
 
     private Reserva salvarReserva(Usuario dono, Sala reservaSala, Professor reservaProfessor, Material reservaMaterial) {
-        return reservaRepository.saveAndFlush(new Reserva(dono, reservaSala, reservaProfessor, reservaMaterial,
+        return salvarReserva(dono, reservaSala, reservaProfessor, reservaMaterial, StatusReserva.SOLICITADA);
+    }
+
+    private Reserva salvarReserva(Usuario dono, Sala reservaSala, Professor reservaProfessor, Material reservaMaterial,
+                                  StatusReserva status) {
+        return salvarReserva(dono, reservaSala, reservaProfessor, reservaMaterial, status,
                 OffsetDateTime.parse("2026-11-03T09:00:00-03:00"),
-                OffsetDateTime.parse("2026-11-03T10:00:00-03:00"),
-                br.com.senac.organizacaorecursos.entity.StatusReserva.SOLICITADA));
+                OffsetDateTime.parse("2026-11-03T10:00:00-03:00"));
+    }
+
+    private Reserva salvarReserva(Usuario dono, Sala reservaSala, Professor reservaProfessor, Material reservaMaterial,
+                                  StatusReserva status, OffsetDateTime inicio, OffsetDateTime termino) {
+        return reservaRepository.saveAndFlush(new Reserva(dono, reservaSala, reservaProfessor, reservaMaterial,
+                inicio, termino, status));
     }
 
     private String token(Usuario usuario) { return "Bearer " + jwtService.generateToken(usuario); }
@@ -239,5 +347,34 @@ class ReservaApiPostgresTest {
         return "{\"materialId\":" + material.getId()
                 + ",\"inicio\":\"2026-11-03T13:00:00-03:00\","
                 + "\"termino\":\"2026-11-03T14:00:00-03:00\"}";
+    }
+
+    private String pedido(String campoRecurso, Long recursoId, String inicio, String termino) {
+        return "{\"" + campoRecurso + "\":" + recursoId + ",\"inicio\":\"" + inicio
+                + "\",\"termino\":\"" + termino + "\"}";
+    }
+
+    private String pedidoSala() {
+        return pedido("salaId", sala.getId(), "2026-11-03T09:00:00-03:00", "2026-11-03T10:00:00-03:00");
+    }
+
+    private static Stream<Arguments> intervalosSobrepostos() {
+        return Stream.of(
+                Arguments.of("2026-11-03T09:30:00-03:00", "2026-11-03T10:30:00-03:00"),
+                Arguments.of("2026-11-03T08:30:00-03:00", "2026-11-03T09:30:00-03:00"),
+                Arguments.of("2026-11-03T09:15:00-03:00", "2026-11-03T09:45:00-03:00"),
+                Arguments.of("2026-11-03T08:00:00-03:00", "2026-11-03T11:00:00-03:00"),
+                Arguments.of("2026-11-03T09:00:00-03:00", "2026-11-03T10:00:00-03:00"));
+    }
+
+    private static Stream<Arguments> statusesQueBloqueiam() {
+        return Stream.of(StatusReserva.SOLICITADA, StatusReserva.APROVADA,
+                        StatusReserva.EM_USO, StatusReserva.CONCLUIDA)
+                .map(Arguments::of);
+    }
+
+    private static Stream<Arguments> statusesQueNaoBloqueiam() {
+        return Stream.of(StatusReserva.REJEITADA, StatusReserva.CANCELADA, StatusReserva.NAO_COMPARECEU)
+                .map(Arguments::of);
     }
 }
