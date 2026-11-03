@@ -12,6 +12,7 @@ import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
+import br.com.senac.organizacaorecursos.service.ReservaService;
 import java.time.Duration;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,6 +50,9 @@ class SecurityAuthorizationIntegrationTest {
 
     @MockBean
     private MaterialRepository materialRepository;
+
+    @MockBean
+    private ReservaService reservaService;
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("operacoesPublicas")

@@ -15,6 +15,7 @@ import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
+import br.com.senac.organizacaorecursos.service.ReservaService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -61,6 +62,9 @@ class MaterialAuthorizationIntegrationTest {
 
     @MockBean
     private ProfessorRepository professorRepository;
+
+    @MockBean
+    private ReservaService reservaService;
 
     @BeforeEach
     void prepararRepositorio() {
