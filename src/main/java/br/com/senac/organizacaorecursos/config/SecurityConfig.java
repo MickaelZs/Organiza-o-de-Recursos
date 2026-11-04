@@ -31,6 +31,11 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/salas").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/professores").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/materiais").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/api/reservas/*/aprovar", "/api/reservas/*/rejeitar").hasRole("RESPONSAVEL")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/reservas").hasRole("SOLICITANTE")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/reservas/**").hasRole("SOLICITANTE")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/reservas/**").hasRole("SOLICITANTE")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->

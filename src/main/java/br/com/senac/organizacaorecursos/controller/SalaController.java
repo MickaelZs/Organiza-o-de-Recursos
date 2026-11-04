@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import java.net.URI;
 import java.util.List;
+import java.time.OffsetDateTime;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 
 @RestController
@@ -36,8 +38,13 @@ public class SalaController {
     @GetMapping
     public List<SalaResponse> listar(@RequestParam(required = false) String tipo,
                                      @RequestParam(required = false) @Min(0) Integer capacidadeMinima,
-                                     @RequestParam(required = false) String localizacao) {
-        return salaService.buscar(tipo, capacidadeMinima, localizacao).stream().map(SalaResponse::from).toList();
+                                     @RequestParam(required = false) String localizacao,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                             OffsetDateTime inicio,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                             OffsetDateTime termino) {
+        return salaService.buscar(tipo, capacidadeMinima, localizacao, inicio, termino)
+                .stream().map(SalaResponse::from).toList();
     }
 
     @GetMapping("/{id}")

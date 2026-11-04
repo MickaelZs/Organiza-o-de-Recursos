@@ -3,16 +3,22 @@ package br.com.senac.organizacaorecursos;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasSize;
 
 import br.com.senac.organizacaorecursos.entity.Material;
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Professor;
 import br.com.senac.organizacaorecursos.entity.Sala;
+import br.com.senac.organizacaorecursos.entity.Reserva;
+import br.com.senac.organizacaorecursos.entity.StatusReserva;
 import br.com.senac.organizacaorecursos.entity.Usuario;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
+import br.com.senac.organizacaorecursos.repository.ReservaRepository;
+import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
+import java.time.OffsetDateTime;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +41,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("postgres-test")
 @Testcontainers
 class ResourceSearchApiPostgresTest {
+    private static final String BCRYPT_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
     @Container
     static final PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("organizacao_recursos_test")
@@ -63,23 +71,44 @@ class ResourceSearchApiPostgresTest {
     @Autowired
     private MaterialRepository materialRepository;
 
+    @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    private Sala salaOcupada;
+    private Sala salaLivre;
+    private Professor professorOcupado;
+    private Material materialOcupado;
+    private Usuario solicitante;
+
     @BeforeEach
     void prepararDados() {
+        reservaRepository.deleteAll();
+        usuarioRepository.deleteAll();
         materialRepository.deleteAll();
         professorRepository.deleteAll();
         salaRepository.deleteAll();
 
-        salaRepository.saveAll(Stream.of(
+        var salas = salaRepository.saveAll(Stream.of(
                 new Sala("Sala alvo", "Laboratorio", 40, "Bloco A", false, true),
                 new Sala("Sala pequena", "Laboratorio", 20, "Bloco B", false, true),
-                new Sala("Auditorio", "Auditorio", 50, "Bloco A", false, true)).toList());
-        professorRepository.saveAll(Stream.of(
+                new Sala("Auditorio", "Auditorio", 50, "Bloco A", false, true),
+                new Sala("Sala livre", "Laboratorio", 35, "Bloco A", false, true)).toList());
+        salaOcupada = salas.get(0);
+        salaLivre = salas.get(3);
+        var professores = professorRepository.saveAll(Stream.of(
                 new Professor("Ana", "ana@senac.br", "Desenvolvimento Java", true),
                 new Professor("Bruno", "bruno@senac.br", "Redes", true)).toList());
-        materialRepository.saveAll(Stream.of(
+        professorOcupado = professores.get(0);
+        var materiais = materialRepository.saveAll(Stream.of(
                 new Material("Projetor alvo", "Equipamento", 5, 3, "Bloco A", true, true),
                 new Material("Projetor B", "Equipamento", 2, 2, "Bloco B", false, true),
                 new Material("Cabo", "Acessorio", 10, 10, "Bloco A", false, true)).toList());
+        materialOcupado = materiais.get(0);
+        solicitante = usuarioRepository.saveAndFlush(
+                new Usuario("Solicitante", "disponibilidade@senac.br", BCRYPT_HASH, Perfil.SOLICITANTE, true));
     }
 
     @Test
@@ -88,8 +117,7 @@ class ResourceSearchApiPostgresTest {
                         .param("capacidadeMinima", "30").param("localizacao", "bloco a")
                         .header("Authorization", token(Perfil.SOLICITANTE)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].nome").value("Sala alvo"));
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
@@ -118,6 +146,73 @@ class ResourceSearchApiPostgresTest {
         mockMvc.perform(get("/api/professores?competencia=robotica").header("Authorization", token(Perfil.ADMIN)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void filtraDisponibilidadeDeSalaAntesDepoisEOcupacaoNoIntervaloConflitante() throws Exception {
+        salvarReserva(salaOcupada, null, null);
+
+        buscarSalas("2026-11-03T08:00:00-03:00", "2026-11-03T09:00:00-03:00")
+                .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.id == " + salaOcupada.getId() + ")]").value(hasSize(1)));
+        buscarSalas("2026-11-03T10:00:00-03:00", "2026-11-03T11:00:00-03:00")
+                .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.id == " + salaOcupada.getId() + ")]").value(hasSize(1)));
+        buscarSalas("2026-11-03T09:30:00-03:00", "2026-11-03T10:30:00-03:00")
+                .andExpect(status().isOk()).andExpect(jsonPath("$[?(@.id == " + salaOcupada.getId() + ")]").value(hasSize(0)));
+    }
+
+    @Test
+    void aplicaDisponibilidadeAProfessorEMaterialEPermiteRecursosSemReservas() throws Exception {
+        salvarReserva(null, professorOcupado, null);
+        salvarReserva(null, null, materialOcupado);
+
+        mockMvc.perform(get("/api/professores").param("inicio", "2026-11-03T09:00:00-03:00")
+                        .param("termino", "2026-11-03T10:00:00-03:00")
+                        .header("Authorization", token(Perfil.ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + professorOcupado.getId() + ")]").value(hasSize(0)))
+                .andExpect(jsonPath("$[?(@.nome == 'Bruno')]").value(hasSize(1)));
+        mockMvc.perform(get("/api/materiais").param("inicio", "2026-11-03T09:00:00-03:00")
+                        .param("termino", "2026-11-03T10:00:00-03:00")
+                        .header("Authorization", token(Perfil.ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + materialOcupado.getId() + ")]").value(hasSize(0)))
+                .andExpect(jsonPath("$[?(@.nome == 'Projetor B')]").value(hasSize(1)));
+        buscarSalas("2026-11-03T09:00:00-03:00", "2026-11-03T10:00:00-03:00")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + salaLivre.getId() + ")]").value(hasSize(1)));
+    }
+
+    @Test
+    void combinaFiltroTemporalComFiltrosEstruturaisECaseInsensitive() throws Exception {
+        salvarReserva(salaOcupada, null, null);
+        mockMvc.perform(get("/api/salas").param("tipo", "LABORATORIO")
+                        .param("capacidadeMinima", "30").param("localizacao", "BLOCO A")
+                        .param("inicio", "2026-11-03T09:00:00-03:00")
+                        .param("termino", "2026-11-03T10:00:00-03:00")
+                        .header("Authorization", token(Perfil.SOLICITANTE)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nome").value("Sala livre"));
+    }
+
+    @Test
+    void rejeitaIntervaloTemporalAusenteParcialIgualOuInvertido() throws Exception {
+        mockMvc.perform(get("/api/salas").param("inicio", "2026-11-03T09:00:00-03:00")
+                        .header("Authorization", token(Perfil.ADMIN)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/salas").param("inicio", "data-invalida").param("termino", "2026-11-03T10:00:00-03:00")
+                        .header("Authorization", token(Perfil.ADMIN)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/salas").param("inicio", "2026-11-03T09:00:00-03:00")
+                        .param("termino", "2026-11-03T09:00:00-03:00").header("Authorization", token(Perfil.ADMIN)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/salas").param("inicio", "2026-11-03T10:00:00-03:00")
+                        .param("termino", "2026-11-03T09:00:00-03:00").header("Authorization", token(Perfil.ADMIN)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void mantemListagemCompletaQuandoIntervaloNaoInformado() throws Exception {
+        buscarSalas(null, null).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(4));
     }
 
     @Test
@@ -165,5 +260,19 @@ class ResourceSearchApiPostgresTest {
     private String token(Perfil perfil) {
         return "Bearer " + jwtService.generateToken(
                 new Usuario("Usuario", perfil.name().toLowerCase() + "@senac.br", "hash", perfil, true));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions buscarSalas(String inicio, String termino)
+            throws Exception {
+        var request = get("/api/salas").header("Authorization", token(Perfil.ADMIN));
+        if (inicio != null) request.param("inicio", inicio);
+        if (termino != null) request.param("termino", termino);
+        return mockMvc.perform(request);
+    }
+
+    private void salvarReserva(Sala sala, Professor professor, Material material) {
+        reservaRepository.saveAndFlush(new Reserva(solicitante, sala, professor, material,
+                OffsetDateTime.parse("2026-11-03T09:00:00-03:00"),
+                OffsetDateTime.parse("2026-11-03T10:00:00-03:00"), StatusReserva.SOLICITADA));
     }
 }

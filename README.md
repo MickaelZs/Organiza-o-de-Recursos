@@ -2,7 +2,7 @@
 
 Projeto acadêmico da disciplina de Qualidade de Software. O sistema será destinado ao gerenciamento de salas, professores, materiais/equipamentos e reservas.
 
-**Escopo atual:** RF-01 a RF-03 do Integrante 1. RF-01 e RF-02 estão implementados e validados; RF-03 possui filtros estruturais validados, enquanto a disponibilidade temporal permanece pendente de etapas futuras.
+**Escopo validado:** RF-01 a RF-07. Autenticação/autorização, recursos, busca estrutural e temporal, reservas, conflitos, proteção contra concorrência e aprovação de recursos restritos estão implementados e validados. RF-08 a RF-14 permanecem fora do escopo concluído.
 
 ## Tecnologias
 
@@ -51,10 +51,10 @@ Autenticação da API: `POST /api/auth/login` recebe `email` e `senha` e retorna
 
 No Windows, use `mvnw.cmd -B clean verify`. Os testes de persistência e filtros usam PostgreSQL via Testcontainers 1.21.4 e exigem Docker; não há substituição por H2.
 
-Evidência final do `clean verify`: 93 testes executados, 0 falhas, 0 erros, 0 ignorados e BUILD SUCCESS. O JaCoCo gerou `target/site/jacoco` com 97.59% de linhas (243 cobertas / 6 não cobertas) e 76.92% de branches (40 cobertos / 12 não cobertos), acima das metas de 80% e 70%. PostgreSQL real, Testcontainers 1.21.4 e Flyway V1-V5 foram validados em banco limpo.
+Evidência de integração final (03/11/2026): `clean verify` executado com Java 21.0.11 terminou em BUILD SUCCESS, com 147 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo gerou `target/site/jacoco`: 96,37% de linhas (451/468) e 83,87% de branches (156/186), acima das metas de 80% e 70%. Os testes de persistência, conflitos, concorrência e busca usaram PostgreSQL real via Testcontainers 1.21.4; Flyway aplicou V1–V6 em banco limpo, chegando ao schema v6. Testes focados de integração executados antes da suíte: 122 testes, sem falhas ou erros.
 
 ## Estrutura resumida
 
 `src/main/java/br/com/senac/organizacaorecursos` contém as camadas `config`, `controller`, `dto`, `entity`, `exception`, `repository`, `security` e `service`. A documentação de qualidade está em `docs/`.
 
-Reservas, disponibilidade temporal, manutenção, movimentações, notificações e relatórios não pertencem ao escopo implementado.
+Manutenção, retirada/devolução, auditoria, notificações, relatórios e interface responsiva (RF-08 a RF-14) não pertencem ao escopo implementado.

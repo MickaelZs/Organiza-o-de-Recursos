@@ -5,6 +5,7 @@ import br.com.senac.organizacaorecursos.entity.Material;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import java.util.List;
 import java.util.Locale;
+import java.time.OffsetDateTime;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,12 @@ public class MaterialService {
 
     @Transactional(readOnly = true)
     public List<Material> buscar(String tipo, String localizacao) {
+        return buscar(tipo, localizacao, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Material> buscar(String tipo, String localizacao, OffsetDateTime inicio, OffsetDateTime termino) {
+        validarIntervalo(inicio, termino);
         Specification<Material> filtros = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
         if (temTexto(tipo)) {
             filtros = filtros.and(contemIgnorandoMaiusculas("tipo", tipo));
@@ -41,7 +48,14 @@ public class MaterialService {
         if (temTexto(localizacao)) {
             filtros = filtros.and(contemIgnorandoMaiusculas("localizacao", localizacao));
         }
+        if (inicio != null) filtros = filtros.and(DisponibilidadeSpecifications.disponivel("material", inicio, termino));
         return materialRepository.findAll(filtros);
+    }
+
+    private void validarIntervalo(OffsetDateTime inicio, OffsetDateTime termino) {
+        if ((inicio == null) != (termino == null) || (inicio != null && !termino.isAfter(inicio))) {
+            throw new IntervaloDisponibilidadeInvalidoException();
+        }
     }
 
     @Transactional(readOnly = true)

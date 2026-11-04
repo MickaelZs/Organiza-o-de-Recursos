@@ -15,6 +15,7 @@ import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
+import br.com.senac.organizacaorecursos.service.ReservaService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,6 +32,9 @@ class HealthControllerTest {
 
     @MockBean
     private MaterialRepository materialRepository;
+
+    @MockBean
+    private ReservaService reservaService;
 
     @Autowired
     private MockMvc mockMvc;
