@@ -82,7 +82,11 @@ class ReservaConcorrenciaPostgresTest {
         List<Resultado> resultados = executarConcorrentemente(
                 pedidoSala(sala), pedidoSala(sala));
 
-        assertThat(resultados).containsExactlyInAnyOrder(Resultado.CRIADA, Resultado.CONFLITO);
+        long sucessos = resultados.stream().filter(Resultado.CRIADA::equals).count();
+        long conflitos = resultados.stream().filter(Resultado.CONFLITO::equals).count();
+        assertThat(sucessos).isEqualTo(1);
+        assertThat(conflitos).isEqualTo(1);
+
         var reservasPersistidas = reservaRepository.findAll().stream()
                 .filter(reserva -> reserva.getSala().getId().equals(sala.getId()))
                 .toList();

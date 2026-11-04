@@ -13,8 +13,12 @@ import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.ReservaRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,7 +77,7 @@ public class ReservaService {
         Usuario usuario = usuarioSolicitante(emailAutenticado);
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
-        var recurso = resolverRecurso(request);
+        Recurso recurso = bloquearRecursosParaAtualizacao(reserva, request);
         if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(reserva.getStatus())) {
             verificarConflito(recurso, request, reserva.getId());
         }
@@ -174,6 +178,45 @@ public class ReservaService {
         return new Recurso(sala, professor, material);
     }
 
+    private Recurso bloquearRecursosParaAtualizacao(Reserva reserva, ReservaRequest request) {
+        List<RecursoLock> bloqueios = new ArrayList<>();
+        adicionarBloqueio(bloqueios, TipoRecurso.SALA, reserva.getSala() == null ? null : reserva.getSala().getId());
+        adicionarBloqueio(bloqueios, TipoRecurso.PROFESSOR, reserva.getProfessor() == null ? null : reserva.getProfessor().getId());
+        adicionarBloqueio(bloqueios, TipoRecurso.MATERIAL, reserva.getMaterial() == null ? null : reserva.getMaterial().getId());
+        adicionarBloqueio(bloqueios, TipoRecurso.SALA, request.salaId());
+        adicionarBloqueio(bloqueios, TipoRecurso.PROFESSOR, request.professorId());
+        adicionarBloqueio(bloqueios, TipoRecurso.MATERIAL, request.materialId());
+
+        Map<String, RecursoLock> bloqueiosUnicos = new LinkedHashMap<>();
+        for (RecursoLock bloqueio : bloqueios) {
+            if (bloqueio.id() != null) {
+                bloqueiosUnicos.putIfAbsent(bloqueio.tipo().name() + ':' + bloqueio.id(), bloqueio);
+            }
+        }
+
+        List<RecursoLock> bloqueiosOrdenados = new ArrayList<>(bloqueiosUnicos.values());
+        bloqueiosOrdenados.sort(Comparator.comparingInt(RecursoLock::ordem).thenComparing(RecursoLock::id));
+
+        for (RecursoLock bloqueio : bloqueiosOrdenados) {
+            switch (bloqueio.tipo()) {
+                case SALA -> salaRepository.findByIdParaReserva(bloqueio.id())
+                        .orElseThrow(SalaNotFoundException::new);
+                case PROFESSOR -> professorRepository.findByIdParaReserva(bloqueio.id())
+                        .orElseThrow(ProfessorNotFoundException::new);
+                case MATERIAL -> materialRepository.findByIdParaReserva(bloqueio.id())
+                        .orElseThrow(MaterialNotFoundException::new);
+            }
+        }
+
+        return resolverRecurso(request);
+    }
+
+    private void adicionarBloqueio(List<RecursoLock> bloqueios, TipoRecurso tipo, Long id) {
+        if (id != null) {
+            bloqueios.add(new RecursoLock(tipo, id));
+        }
+    }
+
     private void verificarConflito(Recurso recurso, ReservaRequest request, Long idExcluido) {
         verificarConflito(recurso, request.inicio(), request.termino(), idExcluido);
     }
@@ -190,4 +233,14 @@ public class ReservaService {
     }
 
     private record Recurso(Sala sala, Professor professor, Material material) { }
+    private record RecursoLock(TipoRecurso tipo, Long id) {
+        int ordem() {
+            return tipo.ordinal();
+        }
+    }
+    private enum TipoRecurso {
+        SALA,
+        PROFESSOR,
+        MATERIAL
+    }
 }
