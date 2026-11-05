@@ -43,6 +43,7 @@ Linux/macOS:
 ```
 
 Health check: `GET /api/health`. A especificação OpenAPI fica disponível em `/swagger-ui.html`.
+Interface web responsiva: `/`.
 
 ## Fluxos e endpoints principais
 
@@ -87,4 +88,4 @@ Evidência final (05/11/2026): `clean verify` executado com Java 21 terminou em 
 
 O código fica em `src/main/java/br/com/senac/organizacaorecursos`, organizado em `config`, `controller`, `dto`, `entity`, `exception`, `repository`, `security` e `service`. Requisitos, decisões e rastreabilidade ficam em `docs/`.
 
-Limitação conhecida: RF13 foi implementado como interface REST e contrato de erros, pois o projeto é uma API e não há requisito documentado de frontend visual.
+Interface responsiva: o sistema disponibiliza uma interface web em `/` com acesso por JWT e painéis condicionados ao perfil. A interface consome as APIs existentes; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos.

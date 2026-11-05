@@ -14,7 +14,7 @@
 | RF-10 | `Auditoria`, repository/service/controller e V9 | `AuditoriaPostgresTest`; operações auditadas listadas no relatório final | IMPLEMENTADO |
 | RF-11 | `Notificacao`, repository/service/controller e V10 | `NotificacaoPostgresTest`; eventos notificados listados no relatório final | IMPLEMENTADO |
 | RF-12 | `RelatorioController`, `RelatorioService`, `RelatorioRepository` e DTOs | `RelatorioPostgresTest`, PostgreSQL/Testcontainers e Flyway V1–V10 | IMPLEMENTADO |
-| RF-13 | `ApiError`, handlers globais e respostas JSON de SecurityConfig | `InterfaceErrosIntegrationTest` e testes de autorização/regra | IMPLEMENTADO |
+| RF-13 | Interface web responsiva, `ApiError`, handlers globais e respostas JSON de SecurityConfig | `InterfaceErrosIntegrationTest`, recursos estáticos e testes de autorização/regra | IMPLEMENTADO |
 | RF-14 | README, PRD, RTM, status, matriz de autorização e guias de API | Revisão de documentação contra código/testes; build final | IMPLEMENTADO |
 
 ## Evidência quantitativa

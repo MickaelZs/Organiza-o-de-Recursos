@@ -3,6 +3,7 @@ package br.com.senac.organizacaorecursos;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Usuario;
@@ -38,6 +39,20 @@ class InterfaceErrosIntegrationTest {
     @MockBean private AuditoriaRepository auditoriaRepository;
     @MockBean private NotificacaoRepository notificacaoRepository;
     @MockBean private RelatorioRepository relatorioRepository;
+
+    @Test
+    void disponibilizaInterfaceEAssetsSemAbrirRotasDaApi() throws Exception {
+        mockMvc.perform(get("/")).andExpect(status().isOk());
+        mockMvc.perform(get("/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Organiza Recursos")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/app.js")));
+        mockMvc.perform(get("/styles.css")).andExpect(status().isOk());
+        mockMvc.perform(get("/app.js")).andExpect(status().isOk());
+        mockMvc.perform(get("/swagger-ui.html")).andExpect(status().isOk());
+        mockMvc.perform(get("/api-docs")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/reservas")).andExpect(status().isUnauthorized());
+    }
 
     @Test
     void padronizaNaoAutenticadoEProtegeDadosSensíveis() throws Exception {

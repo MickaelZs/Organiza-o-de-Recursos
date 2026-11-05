@@ -14,7 +14,7 @@
 | RF-10 | Sim | `AuditoriaPostgresTest` e V9 | PASS |
 | RF-11 | Sim | `NotificacaoPostgresTest` e V10 | PASS |
 | RF-12 | Sim | `RelatorioPostgresTest` e PostgreSQL/Testcontainers | PASS |
-| RF-13 | Sim | `InterfaceErrosIntegrationTest` e contrato REST | PASS |
+| RF-13 | Sim | Interface web responsiva, `InterfaceErrosIntegrationTest` e contrato REST | PASS |
 | RF-14 | Sim | Documentação revisada contra implementação e evidências | PASS |
 
 ## Evidência final

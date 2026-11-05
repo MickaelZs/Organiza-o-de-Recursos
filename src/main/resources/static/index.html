@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c35">
+  <title>Organiza Recursos</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Organiza Recursos, início"><span class="brand-mark" aria-hidden="true">OR</span><span>Organiza<strong>Recursos</strong></span></a>
+    <div class="account"><span id="profile-badge" class="profile-badge" hidden></span><button id="logout-button" class="button button-quiet" hidden>Sair</button></div>
+  </header>
+  <main class="page-shell">
+    <section id="login-panel" class="login-layout">
+      <div class="intro-panel"><p class="eyebrow">SENAC · GESTÃO DE ESPAÇOS</p><h1>Seu próximo espaço começa com uma boa organização.</h1><p>Acesse para consultar recursos, acompanhar reservas e realizar operações conforme seu perfil.</p><div class="intro-note"><span aria-hidden="true">✓</span> Reservas organizadas, informações em um só lugar.</div></div>
+      <form id="login-form" class="panel login-card">
+        <p class="eyebrow">ÁREA DE ACESSO</p><h2>Entrar</h2><p class="muted">Use as credenciais da sua conta.</p>
+        <label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" required>
+        <label for="password">Senha</label><input id="password" name="senha" type="password" autocomplete="current-password" required>
+        <button class="button button-primary button-wide" type="submit">Acessar sistema</button>
+        <p id="login-error" class="message message-error" role="alert" hidden></p>
+      </form>
+    </section>
+    <section id="workspace" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">PAINEL DE OPERAÇÕES</p><h1 id="welcome-title">Bem-vindo</h1><p id="welcome-subtitle" class="muted"></p></div><button class="button button-outline" data-action="refresh">Atualizar dados</button></div>
+      <nav id="navigation" class="tabs" aria-label="Áreas do sistema"></nav>
+      <div id="feedback" class="message" role="status" hidden></div>
+      <div id="content" class="content-grid"></div>
+    </section>
+  </main>
+  <footer class="footer">Sistema de Organização de Recursos <span>·</span> Interface conectada à API</footer>
+</body>
+</html>
