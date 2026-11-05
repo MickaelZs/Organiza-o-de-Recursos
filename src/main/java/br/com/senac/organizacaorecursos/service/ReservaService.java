@@ -35,16 +35,21 @@ public class ReservaService {
     private final ProfessorRepository professorRepository;
     private final MaterialRepository materialRepository;
     private final ManutencaoRepository manutencaoRepository;
+    private final AuditoriaService auditoriaService;
+    private final NotificacaoService notificacaoService;
 
     public ReservaService(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository,
                           SalaRepository salaRepository, ProfessorRepository professorRepository,
-                          MaterialRepository materialRepository, ManutencaoRepository manutencaoRepository) {
+                          MaterialRepository materialRepository, ManutencaoRepository manutencaoRepository,
+                          AuditoriaService auditoriaService, NotificacaoService notificacaoService) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.professorRepository = professorRepository;
         this.materialRepository = materialRepository;
         this.manutencaoRepository = manutencaoRepository;
+        this.auditoriaService = auditoriaService;
+        this.notificacaoService = notificacaoService;
     }
 
     @Transactional
@@ -55,8 +60,11 @@ public class ReservaService {
         }
         var recurso = resolverRecurso(request);
         verificarConflito(recurso, request, null);
-        return reservaRepository.save(new Reserva(solicitante, recurso.sala(), recurso.professor(), recurso.material(),
+        Reserva reserva = reservaRepository.save(new Reserva(solicitante, recurso.sala(), recurso.professor(), recurso.material(),
                 request.inicio(), request.termino(), statusInicial(recurso)));
+        auditoriaService.registrar(emailAutenticado, "RESERVA", reserva.getId(), "CRIADA",
+                null, reserva.getStatus().name(), "Reserva criada");
+        return reserva;
     }
 
     @Transactional(readOnly = true)
@@ -98,8 +106,14 @@ public class ReservaService {
         validarSolicitacaoRestritaPendente(reserva);
         Recurso recurso = bloquearRecursoDaReserva(reserva);
         verificarConflito(recurso, reserva.getInicio(), reserva.getTermino(), reserva.getId());
+        StatusReserva anterior = reserva.getStatus();
         reserva.aprovar();
-        return reservaRepository.save(reserva);
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "APROVADA",
+                anterior.name(), salva.getStatus().name(), "Reserva aprovada");
+        notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_APROVADA",
+                "Sua reserva foi aprovada.", "RESERVA", salva.getId());
+        return salva;
     }
 
     @Transactional
@@ -107,8 +121,57 @@ public class ReservaService {
         usuarioResponsavel(emailAutenticado);
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         validarSolicitacaoRestritaPendente(reserva);
+        StatusReserva anterior = reserva.getStatus();
         reserva.rejeitar();
-        return reservaRepository.save(reserva);
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "REJEITADA",
+                anterior.name(), salva.getStatus().name(), "Reserva rejeitada");
+        notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_REJEITADA",
+                "Sua reserva foi rejeitada.", "RESERVA", salva.getId());
+        return salva;
+    }
+
+    @Transactional
+    public Reserva registrarRetirada(Long id, String emailAutenticado) {
+        usuarioResponsavelOuAdmin(emailAutenticado);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
+        if (reserva.getStatus() != StatusReserva.APROVADA) {
+            throw new ReservaEstadoInvalidoException();
+        }
+        if (reserva.getRetiradoEm() != null) {
+            throw new ReservaEstadoInvalidoException();
+        }
+        StatusReserva anterior = reserva.getStatus();
+        reserva.registrarRetirada(java.time.OffsetDateTime.now());
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "RETIRADA",
+                anterior.name(), salva.getStatus().name(), "Recurso retirado");
+        notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_RETIRADA",
+                "A retirada do recurso foi registrada.", "RESERVA", salva.getId());
+        return salva;
+    }
+
+    @Transactional
+    public Reserva registrarDevolucao(Long id, String emailAutenticado) {
+        usuarioResponsavelOuAdmin(emailAutenticado);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
+        if (reserva.getStatus() != StatusReserva.EM_USO) {
+            throw new ReservaEstadoInvalidoException();
+        }
+        if (reserva.getRetiradoEm() == null) {
+            throw new ReservaEstadoInvalidoException();
+        }
+        if (reserva.getDevolvidoEm() != null) {
+            throw new ReservaEstadoInvalidoException();
+        }
+        StatusReserva anterior = reserva.getStatus();
+        reserva.registrarDevolucao(java.time.OffsetDateTime.now());
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "DEVOLVIDA",
+                anterior.name(), salva.getStatus().name(), "Recurso devolvido");
+        notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_DEVOLVIDA",
+                "A devolucao do recurso foi registrada.", "RESERVA", salva.getId());
+        return salva;
     }
 
     @Transactional
@@ -116,8 +179,13 @@ public class ReservaService {
         Usuario usuario = usuarioSolicitante(emailAutenticado);
         Reserva reserva = reservaRepository.findById(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
+        StatusReserva anterior = reserva.getStatus();
         reserva.cancelar();
-        reservaRepository.save(reserva);
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "CANCELADA",
+                anterior.name(), salva.getStatus().name(), "Reserva cancelada");
+        notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_CANCELADA",
+                "Sua reserva foi cancelada.", "RESERVA", salva.getId());
     }
 
     private Usuario usuarioAtivo(String email) {
@@ -134,6 +202,13 @@ public class ReservaService {
     private void usuarioResponsavel(String email) {
         Usuario usuario = usuarioAtivo(email);
         if (usuario.getPerfil() != Perfil.RESPONSAVEL) throw new ReservaAprovacaoNaoPermitidaException();
+    }
+
+    private void usuarioResponsavelOuAdmin(String email) {
+        Usuario usuario = usuarioAtivo(email);
+        if (usuario.getPerfil() != Perfil.RESPONSAVEL && usuario.getPerfil() != Perfil.ADMIN) {
+            throw new ReservaAprovacaoNaoPermitidaException();
+        }
     }
 
     private void validarSolicitacaoRestritaPendente(Reserva reserva) {

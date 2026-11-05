@@ -30,16 +30,21 @@ public class ManutencaoService {
     private final ProfessorRepository professorRepository;
     private final MaterialRepository materialRepository;
     private final ReservaRepository reservaRepository;
+    private final AuditoriaService auditoriaService;
+    private final NotificacaoService notificacaoService;
 
     public ManutencaoService(ManutencaoRepository manutencaoRepository, UsuarioRepository usuarioRepository,
                              SalaRepository salaRepository, ProfessorRepository professorRepository,
-                             MaterialRepository materialRepository, ReservaRepository reservaRepository) {
+                             MaterialRepository materialRepository, ReservaRepository reservaRepository,
+                             AuditoriaService auditoriaService, NotificacaoService notificacaoService) {
         this.manutencaoRepository = manutencaoRepository;
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.professorRepository = professorRepository;
         this.materialRepository = materialRepository;
         this.reservaRepository = reservaRepository;
+        this.auditoriaService = auditoriaService;
+        this.notificacaoService = notificacaoService;
     }
 
     @Transactional
@@ -53,7 +58,7 @@ public class ManutencaoService {
         bloquearRecurso(recurso);
         verificarConflito(recurso, request.inicio(), request.termino(), null);
 
-        return manutencaoRepository.save(new Manutencao(
+        Manutencao manutencao = manutencaoRepository.save(new Manutencao(
                 tipoDoRecurso(recurso),
                 recurso.sala(),
                 recurso.professor(),
@@ -64,6 +69,11 @@ public class ManutencaoService {
                 responsavel,
                 OffsetDateTime.now(),
                 StatusManutencao.ATIVA));
+        auditoriaService.registrar(emailAutenticado, "MANUTENCAO", manutencao.getId(), "CRIADA",
+                null, manutencao.getStatus().name(), "Manutencao criada");
+        notificacaoService.criarParaUsuario(responsavel.getEmail(), "MANUTENCAO_CRIADA",
+                "A manutencao foi registrada no sistema.", "MANUTENCAO", manutencao.getId());
+        return manutencao;
     }
 
     @Transactional(readOnly = true)
@@ -101,8 +111,14 @@ public class ManutencaoService {
         if (usuario.getPerfil() == Perfil.RESPONSAVEL && !manutencao.getResponsavel().getId().equals(usuario.getId())) {
             throw new ManutencaoOwnershipException();
         }
+        StatusManutencao anterior = manutencao.getStatus();
         manutencao.cancelar();
-        return manutencaoRepository.save(manutencao);
+        Manutencao salva = manutencaoRepository.save(manutencao);
+        auditoriaService.registrar(emailAutenticado, "MANUTENCAO", salva.getId(), "CANCELADA",
+                anterior.name(), salva.getStatus().name(), "Manutencao cancelada");
+        notificacaoService.criarParaUsuario(salva.getResponsavel().getEmail(), "MANUTENCAO_CANCELADA",
+                "A manutencao foi cancelada.", "MANUTENCAO", salva.getId());
+        return salva;
     }
 
     private Usuario usuarioAtivo(String email) {

@@ -10,8 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Sala;
 import br.com.senac.organizacaorecursos.entity.Usuario;
+import br.com.senac.organizacaorecursos.repository.AuditoriaRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
+import br.com.senac.organizacaorecursos.repository.NotificacaoRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
@@ -65,6 +67,12 @@ class SalaAuthorizationIntegrationTest {
 
     @MockBean
     private ReservaService reservaService;
+
+    @MockBean
+    private AuditoriaRepository auditoriaRepository;
+
+    @MockBean
+    private NotificacaoRepository notificacaoRepository;
 
     @BeforeEach
     void prepararRepositorio() {

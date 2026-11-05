@@ -1,5 +1,6 @@
 package br.com.senac.organizacaorecursos.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -48,6 +49,7 @@ public class Usuario {
     public Long getId() { return id; }
     public String getNome() { return nome; }
     public String getEmail() { return email; }
+    @JsonIgnore
     public String getSenha() { return senha; }
     public Perfil getPerfil() { return perfil; }
     public Boolean getAtivo() { return ativo; }

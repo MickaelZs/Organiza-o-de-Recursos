@@ -12,7 +12,9 @@ import br.com.senac.organizacaorecursos.entity.Sala;
 import br.com.senac.organizacaorecursos.entity.Reserva;
 import br.com.senac.organizacaorecursos.entity.StatusReserva;
 import br.com.senac.organizacaorecursos.entity.Usuario;
+import br.com.senac.organizacaorecursos.repository.AuditoriaRepository;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
+import br.com.senac.organizacaorecursos.repository.NotificacaoRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.ReservaRepository;
@@ -77,6 +79,12 @@ class ResourceSearchApiPostgresTest {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private NotificacaoRepository notificacaoRepository;
+
+    @Autowired
+    private AuditoriaRepository auditoriaRepository;
+
     private Sala salaOcupada;
     private Sala salaLivre;
     private Professor professorOcupado;
@@ -85,6 +93,8 @@ class ResourceSearchApiPostgresTest {
 
     @BeforeEach
     void prepararDados() {
+        notificacaoRepository.deleteAll();
+        auditoriaRepository.deleteAll();
         reservaRepository.deleteAll();
         usuarioRepository.deleteAll();
         materialRepository.deleteAll();
