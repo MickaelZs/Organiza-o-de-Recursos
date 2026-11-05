@@ -6,8 +6,10 @@ import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Professor;
 import br.com.senac.organizacaorecursos.entity.Reserva;
 import br.com.senac.organizacaorecursos.entity.Sala;
+import br.com.senac.organizacaorecursos.entity.StatusManutencao;
 import br.com.senac.organizacaorecursos.entity.StatusReserva;
 import br.com.senac.organizacaorecursos.entity.Usuario;
+import br.com.senac.organizacaorecursos.repository.ManutencaoRepository;
 import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.ReservaRepository;
@@ -32,15 +34,17 @@ public class ReservaService {
     private final SalaRepository salaRepository;
     private final ProfessorRepository professorRepository;
     private final MaterialRepository materialRepository;
+    private final ManutencaoRepository manutencaoRepository;
 
     public ReservaService(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository,
                           SalaRepository salaRepository, ProfessorRepository professorRepository,
-                          MaterialRepository materialRepository) {
+                          MaterialRepository materialRepository, ManutencaoRepository manutencaoRepository) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.salaRepository = salaRepository;
         this.professorRepository = professorRepository;
         this.materialRepository = materialRepository;
+        this.manutencaoRepository = manutencaoRepository;
     }
 
     @Transactional
@@ -226,8 +230,11 @@ public class ReservaService {
         Long salaId = recurso.sala() == null ? null : recurso.sala().getId();
         Long professorId = recurso.professor() == null ? null : recurso.professor().getId();
         Long materialId = recurso.material() == null ? null : recurso.material().getId();
-        if (reservaRepository.existsConflito(salaId, professorId, materialId,
-                inicio, termino, STATUS_QUE_BLOQUEIAM_HORARIO, idExcluido)) {
+        boolean conflitoReserva = reservaRepository.existsConflito(salaId, professorId, materialId,
+                inicio, termino, STATUS_QUE_BLOQUEIAM_HORARIO, idExcluido);
+        boolean conflitoManutencao = manutencaoRepository.existsConflito(salaId, professorId, materialId,
+                inicio, termino, StatusManutencao.ATIVA, null);
+        if (conflitoReserva || conflitoManutencao) {
             throw new ReservaConflitoException();
         }
     }
