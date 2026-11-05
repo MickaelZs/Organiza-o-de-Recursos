@@ -41,6 +41,16 @@ public class ReservaController {
         return ReservaResponse.from(reservaService.rejeitar(id, authentication.getName()));
     }
 
+    @PostMapping("/{id}/retirada")
+    public ReservaResponse registrarRetirada(@PathVariable Long id, Authentication authentication) {
+        return ReservaResponse.from(reservaService.registrarRetirada(id, authentication.getName()));
+    }
+
+    @PostMapping("/{id}/devolucao")
+    public ReservaResponse registrarDevolucao(@PathVariable Long id, Authentication authentication) {
+        return ReservaResponse.from(reservaService.registrarDevolucao(id, authentication.getName()));
+    }
+
     @GetMapping
     public List<ReservaResponse> listar(Authentication authentication) {
         return reservaService.listar(authentication.getName()).stream().map(ReservaResponse::from).toList();

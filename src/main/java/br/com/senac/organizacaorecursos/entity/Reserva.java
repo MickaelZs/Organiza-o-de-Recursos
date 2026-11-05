@@ -52,6 +52,12 @@ public class Reserva {
     @Column(nullable = false, length = 20)
     private StatusReserva status;
 
+    @Column(name = "retirado_em")
+    private OffsetDateTime retiradoEm;
+
+    @Column(name = "devolvido_em")
+    private OffsetDateTime devolvidoEm;
+
     protected Reserva() { }
 
     public Reserva(Usuario solicitante, Sala sala, Professor professor, Material material,
@@ -107,6 +113,21 @@ public class Reserva {
         this.status = StatusReserva.CANCELADA;
     }
 
+    public void registrarRetirada(OffsetDateTime retiradoEm) {
+        if (status != StatusReserva.APROVADA) throw new IllegalStateException("Reserva fora de APROVADA");
+        if (this.retiradoEm != null) throw new IllegalStateException("Retirada ja registrada");
+        this.retiradoEm = retiradoEm;
+        this.status = StatusReserva.EM_USO;
+    }
+
+    public void registrarDevolucao(OffsetDateTime devolvidoEm) {
+        if (status != StatusReserva.EM_USO) throw new IllegalStateException("Reserva fora de EM_USO");
+        if (this.retiradoEm == null) throw new IllegalStateException("Reserva sem retirada registrada");
+        if (this.devolvidoEm != null) throw new IllegalStateException("Devolucao ja registrada");
+        this.devolvidoEm = devolvidoEm;
+        this.status = StatusReserva.CONCLUIDA;
+    }
+
     public Long getId() { return id; }
     public Usuario getSolicitante() { return solicitante; }
     public Sala getSala() { return sala; }
@@ -115,4 +136,6 @@ public class Reserva {
     public OffsetDateTime getInicio() { return inicio; }
     public OffsetDateTime getTermino() { return termino; }
     public StatusReserva getStatus() { return status; }
+    public OffsetDateTime getRetiradoEm() { return retiradoEm; }
+    public OffsetDateTime getDevolvidoEm() { return devolvidoEm; }
 }
