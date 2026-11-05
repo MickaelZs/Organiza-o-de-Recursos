@@ -56,7 +56,7 @@ public class ManutencaoService {
 
         Recurso recurso = resolverRecurso(request);
         bloquearRecurso(recurso);
-        verificarConflito(recurso, request.inicio(), request.termino(), null);
+        verificarConflito(emailAutenticado, recurso, request.inicio(), request.termino(), null);
 
         Manutencao manutencao = manutencaoRepository.save(new Manutencao(
                 tipoDoRecurso(recurso),
@@ -154,7 +154,8 @@ public class ManutencaoService {
         return new Recurso(sala, professor, material);
     }
 
-    private void verificarConflito(Recurso recurso, OffsetDateTime inicio, OffsetDateTime termino, Long idExcluido) {
+    private void verificarConflito(String emailAutenticado, Recurso recurso, OffsetDateTime inicio,
+                                   OffsetDateTime termino, Long idExcluido) {
         Long salaId = recurso.sala() == null ? null : recurso.sala().getId();
         Long professorId = recurso.professor() == null ? null : recurso.professor().getId();
         Long materialId = recurso.material() == null ? null : recurso.material().getId();
@@ -165,8 +166,16 @@ public class ManutencaoService {
                 inicio, termino, StatusManutencao.ATIVA, idExcluido);
 
         if (conflitoReserva || conflitoManutencao) {
+            auditoriaService.registrarConflitoEvitado(emailAutenticado, tipoDoRecurso(recurso).name(),
+                    idDoRecurso(recurso), "Conflito de horario evitado em manutencao.");
             throw new ManutencaoConflitoException();
         }
+    }
+
+    private Long idDoRecurso(Recurso recurso) {
+        if (recurso.sala() != null) return recurso.sala().getId();
+        if (recurso.professor() != null) return recurso.professor().getId();
+        return recurso.material().getId();
     }
 
     private record Recurso(Sala sala, Professor professor, Material material) { }

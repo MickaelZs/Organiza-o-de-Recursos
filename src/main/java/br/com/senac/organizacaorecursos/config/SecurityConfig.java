@@ -1,5 +1,8 @@
 package br.com.senac.organizacaorecursos.config;
 
+import br.com.senac.organizacaorecursos.exception.ApiError;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,9 +17,11 @@ import br.com.senac.organizacaorecursos.security.JwtAuthenticationFilter;
 @Configuration
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, ObjectMapper objectMapper) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -45,13 +50,24 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/auditoria", "/api/auditoria/**").hasAnyRole("RESPONSAVEL", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/notificacoes", "/api/notificacoes/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/notificacoes/**").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/relatorios/**")
+                                .hasAnyRole("RESPONSAVEL", "ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
-                                response.sendError(HttpStatus.UNAUTHORIZED.value()))
+                                escreverErro(response, ApiError.of(HttpStatus.UNAUTHORIZED,
+                                        "Autenticacao necessaria.", request)))
                         .accessDeniedHandler((request, response, exception) ->
-                                response.sendError(HttpStatus.FORBIDDEN.value())))
+                                escreverErro(response, ApiError.of(HttpStatus.FORBIDDEN,
+                                        "Acesso negado.", request))))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    private void escreverErro(HttpServletResponse response, ApiError erro) throws java.io.IOException {
+        response.setStatus(erro.status());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getOutputStream(), erro);
     }
 }

@@ -13,6 +13,7 @@ import br.com.senac.organizacaorecursos.repository.MaterialRepository;
 import br.com.senac.organizacaorecursos.repository.NotificacaoRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
+import br.com.senac.organizacaorecursos.repository.RelatorioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
 import br.com.senac.organizacaorecursos.service.ReservaService;
 import java.time.Duration;
@@ -61,6 +62,9 @@ class SecurityAuthorizationIntegrationTest {
 
     @MockBean
     private NotificacaoRepository notificacaoRepository;
+
+    @MockBean
+    private RelatorioRepository relatorioRepository;
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("operacoesPublicas")

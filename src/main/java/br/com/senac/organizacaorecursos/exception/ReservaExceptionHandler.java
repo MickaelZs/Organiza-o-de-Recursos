@@ -5,36 +5,43 @@ import br.com.senac.organizacaorecursos.service.ReservaAprovacaoNaoPermitidaExce
 import br.com.senac.organizacaorecursos.service.ReservaConflitoException;
 import br.com.senac.organizacaorecursos.service.ReservaEstadoInvalidoException;
 import br.com.senac.organizacaorecursos.service.ReservaOwnershipException;
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
 public class ReservaExceptionHandler {
     @ExceptionHandler(ReservaAprovacaoNaoPermitidaException.class)
-    ResponseEntity<Map<String, String>> aprovacaoNaoPermitida() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Somente responsaveis podem aprovar ou rejeitar reservas."));
+    ResponseEntity<ApiError> aprovacaoNaoPermitida(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiError.of(HttpStatus.FORBIDDEN,
+                        "Somente responsaveis podem aprovar ou rejeitar reservas.", request));
     }
 
     @ExceptionHandler(ReservaEstadoInvalidoException.class)
-    ResponseEntity<Map<String, String>> estadoInvalido() {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "A reserva nao esta pendente para aprovacao."));
+    ResponseEntity<ApiError> estadoInvalido(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(HttpStatus.CONFLICT, "A reserva nao esta pendente para aprovacao.", request));
     }
 
     @ExceptionHandler(ReservaNotFoundException.class)
-    ResponseEntity<Map<String, String>> reservaNaoEncontrada() {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Reserva nao encontrada."));
+    ResponseEntity<ApiError> reservaNaoEncontrada(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiError.of(HttpStatus.NOT_FOUND, "Reserva nao encontrada.", request));
     }
 
     @ExceptionHandler(ReservaOwnershipException.class)
-    ResponseEntity<Map<String, String>> acessoNegado() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Acesso a reserva nao permitido."));
+    ResponseEntity<ApiError> acessoNegado(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiError.of(HttpStatus.FORBIDDEN, "Acesso a reserva nao permitido.", request));
     }
 
     @ExceptionHandler(ReservaConflitoException.class)
-    ResponseEntity<Map<String, String>> conflitoDeReserva() {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Horario indisponivel para o recurso."));
+    ResponseEntity<ApiError> conflitoDeReserva(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(HttpStatus.CONFLICT, "Horario indisponivel para o recurso.", request));
     }
 }
