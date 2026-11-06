@@ -17,6 +17,7 @@ import br.com.senac.organizacaorecursos.repository.NotificacaoRepository;
 import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
+import br.com.senac.organizacaorecursos.repository.RelatorioRepository;
 import br.com.senac.organizacaorecursos.service.ReservaService;
 
 @SpringBootTest
@@ -43,6 +44,9 @@ class HealthControllerTest {
 
     @MockBean
     private NotificacaoRepository notificacaoRepository;
+
+    @MockBean
+    private RelatorioRepository relatorioRepository;
 
     @Autowired
     private MockMvc mockMvc;

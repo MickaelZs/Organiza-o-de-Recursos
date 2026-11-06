@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 @Service
 public class AuditoriaService {
@@ -35,6 +36,17 @@ public class AuditoriaService {
                 estadoPosterior == null ? null : estadoPosterior.toString(),
                 detalhes,
                 OffsetDateTime.now()));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Auditoria registrarConflitoEvitado(String emailAutenticado, String tipoRecurso, Long recursoId,
+                                              String detalhes) {
+        Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
+                .filter(Usuario::getAtivo)
+                .orElseThrow(ReservaOwnershipException::new);
+        return auditoriaRepository.save(new Auditoria(
+                usuario, "RECURSO", recursoId, "CONFLITO_EVITADO", null, null,
+                "Conflito evitado para " + tipoRecurso + ": " + detalhes, OffsetDateTime.now()));
     }
 
     @Transactional(readOnly = true)

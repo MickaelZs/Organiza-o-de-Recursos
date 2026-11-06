@@ -59,7 +59,7 @@ public class ReservaService {
             throw new ReservaOwnershipException();
         }
         var recurso = resolverRecurso(request);
-        verificarConflito(recurso, request, null);
+        verificarConflito(emailAutenticado, recurso, request, null);
         Reserva reserva = reservaRepository.save(new Reserva(solicitante, recurso.sala(), recurso.professor(), recurso.material(),
                 request.inicio(), request.termino(), statusInicial(recurso)));
         auditoriaService.registrar(emailAutenticado, "RESERVA", reserva.getId(), "CRIADA",
@@ -91,7 +91,7 @@ public class ReservaService {
         verificarProprietario(reserva, usuario);
         Recurso recurso = bloquearRecursosParaAtualizacao(reserva, request);
         if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(reserva.getStatus())) {
-            verificarConflito(recurso, request, reserva.getId());
+            verificarConflito(emailAutenticado, recurso, request, reserva.getId());
         }
         StatusReserva status = reserva.getStatus() == StatusReserva.SOLICITADA
                 || reserva.getStatus() == StatusReserva.APROVADA ? statusInicial(recurso) : reserva.getStatus();
@@ -105,7 +105,7 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         validarSolicitacaoRestritaPendente(reserva);
         Recurso recurso = bloquearRecursoDaReserva(reserva);
-        verificarConflito(recurso, reserva.getInicio(), reserva.getTermino(), reserva.getId());
+        verificarConflito(emailAutenticado, recurso, reserva.getInicio(), reserva.getTermino(), reserva.getId());
         StatusReserva anterior = reserva.getStatus();
         reserva.aprovar();
         Reserva salva = reservaRepository.save(reserva);
@@ -296,11 +296,11 @@ public class ReservaService {
         }
     }
 
-    private void verificarConflito(Recurso recurso, ReservaRequest request, Long idExcluido) {
-        verificarConflito(recurso, request.inicio(), request.termino(), idExcluido);
+    private void verificarConflito(String emailAutenticado, Recurso recurso, ReservaRequest request, Long idExcluido) {
+        verificarConflito(emailAutenticado, recurso, request.inicio(), request.termino(), idExcluido);
     }
 
-    private void verificarConflito(Recurso recurso, java.time.OffsetDateTime inicio,
+    private void verificarConflito(String emailAutenticado, Recurso recurso, java.time.OffsetDateTime inicio,
                                    java.time.OffsetDateTime termino, Long idExcluido) {
         Long salaId = recurso.sala() == null ? null : recurso.sala().getId();
         Long professorId = recurso.professor() == null ? null : recurso.professor().getId();
@@ -310,8 +310,22 @@ public class ReservaService {
         boolean conflitoManutencao = manutencaoRepository.existsConflito(salaId, professorId, materialId,
                 inicio, termino, StatusManutencao.ATIVA, null);
         if (conflitoReserva || conflitoManutencao) {
+            auditoriaService.registrarConflitoEvitado(emailAutenticado, tipoRecurso(recurso), idRecurso(recurso),
+                    "Conflito de horario evitado em reserva.");
             throw new ReservaConflitoException();
         }
+    }
+
+    private String tipoRecurso(Recurso recurso) {
+        if (recurso.sala() != null) return "SALA";
+        if (recurso.professor() != null) return "PROFESSOR";
+        return "MATERIAL";
+    }
+
+    private Long idRecurso(Recurso recurso) {
+        if (recurso.sala() != null) return recurso.sala().getId();
+        if (recurso.professor() != null) return recurso.professor().getId();
+        return recurso.material().getId();
     }
 
     private record Recurso(Sala sala, Professor professor, Material material) { }
