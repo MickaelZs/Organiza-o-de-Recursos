@@ -14,4 +14,4 @@ As rotas de consulta exigem um JWT valido. Sem parametros, mantem o comportament
 
 Os parametros podem ser combinados nas buscas de Sala e Material; todos os criterios informados devem corresponder. Uma busca valida sem resultado retorna `200 OK` com uma colecao vazia. `404 Not Found` permanece reservado para consulta individual por identificador inexistente.
 
-Quando `inicio` e `termino` sao informados juntos, cada busca exclui recursos com reserva bloqueante sobreposta ao intervalo. Sem os dois parametros, a busca mantém a listagem estrutural. A consulta considera as reservas e os estados bloqueantes definidos para RF-05; manutencao (RF-08) ainda não é considerada. `ativo` não é usado como sinonimo de disponibilidade.
+Quando `inicio` e `termino` sao informados juntos, cada busca exclui recursos com reserva ou manutenção ativa sobreposta ao intervalo. Sem os dois parametros, a busca mantém a listagem estrutural. A consulta considera as reservas e os estados bloqueantes definidos para RF-05 e as manutenções ativas de RF-08. `ativo` não é usado como sinonimo de disponibilidade.

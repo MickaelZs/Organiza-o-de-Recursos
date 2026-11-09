@@ -2,7 +2,7 @@
 
 A matriz abaixo corresponde às regras reais de `SecurityConfig` e às verificações de ownership dos services.
 
-Evidência final: `clean verify` em 05/11/2026, Java 21, 187 testes, 0 falhas, 0 erros, 0 ignorados, BUILD SUCCESS.
+Evidência final: `clean verify` com Java 21 e Docker Desktop, 192 testes, 0 falhas, 0 erros, 0 ignorados, BUILD SUCCESS. O relatório está em `docs/testes/relatorio-testes.md`.
 
 | Operação | Anônimo | SOLICITANTE | RESPONSAVEL | ADMIN |
 |---|---:|---:|---:|---:|
@@ -27,4 +27,4 @@ O solicitante só altera, cancela e consulta a própria reserva. Notificações 
 
 ## Contrato de segurança
 
-401 e 403 são respostas JSON padronizadas por `SecurityConfig`, sem stack trace. Rotas não publicadas continuam exigindo autenticação e, com JWT válido, retornam 404.
+401 e 403 são respostas JSON padronizadas por `SecurityConfig`, sem stack trace. São públicas a interface estática, documentação Springdoc/OpenAPI, health e login; as rotas de negócio continuam exigindo autenticação e, com JWT válido, uma rota inexistente retorna 404.

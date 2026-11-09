@@ -7,7 +7,7 @@ Projeto acadêmico da disciplina de Qualidade de Software para gerenciamento de 
 - Java 21 e Spring Boot 3.5;
 - Spring Web, Data JPA, Validation e Security com JWT;
 - PostgreSQL e Flyway;
-- JUnit 5, Mockito, Testcontainers/PostgreSQL, WireMock e Cucumber;
+- JUnit 5, Mockito e testes parametrizados com Testcontainers/PostgreSQL;
 - JaCoCo e Springdoc/OpenAPI.
 
 ## Pré-requisitos e configuração
@@ -26,7 +26,7 @@ JWT_SECRET=segredo-fornecido-pelo-ambiente
 JWT_EXPIRATION=PT2H
 ```
 
-`JWT_SECRET` é obrigatório para executar a aplicação e não deve conter um valor real no repositório. `.env.example` serve apenas como referência.
+`JWT_SECRET` é obrigatório e deve ser fornecido pelo ambiente em Base64; a aplicação não possui fallback de segredo. `.env.example` serve apenas como referência com um valor falso.
 
 ## Executar
 
@@ -82,10 +82,18 @@ Flyway aplica, em ordem, V1 a V10. V8 cria os campos de retirada/devolução, V9
 
 No Windows, use `./mvnw.cmd -B clean verify`. Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2.
 
-Evidência final (05/11/2026): `clean verify` executado com Java 21 terminou em `BUILD SUCCESS`, com 187 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo registrou 870/933 linhas cobertas (93,25%) e 259/340 branches cobertos (76,18%), acima das metas de 80% e 70%. Flyway validou e aplicou V1–V10 em PostgreSQL 16.15 limpo, chegando ao schema v10.
+Evidência final desta auditoria: `clean verify` executado com Java 21 e Docker Desktop terminou em `BUILD SUCCESS`, com 192 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo registrou 4.616/4.962 linhas cobertas (93,03%) e 266/348 branches cobertos (76,44%), acima das metas de 80% e 70%. O detalhamento está em [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md).
 
 ## Estrutura
 
 O código fica em `src/main/java/br/com/senac/organizacaorecursos`, organizado em `config`, `controller`, `dto`, `entity`, `exception`, `repository`, `security` e `service`. Requisitos, decisões e rastreabilidade ficam em `docs/`.
 
-Interface responsiva: o sistema disponibiliza uma interface web em `/` com acesso por JWT e painéis condicionados ao perfil. A interface consome as APIs existentes; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos.
+Interface responsiva: o sistema disponibiliza uma interface web em `/` com acesso por JWT e painéis condicionados ao perfil. A interface consome as APIs existentes; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos. O redirect documentado pelo Springdoc é `/swagger-ui.html` → `/swagger-ui/index.html`.
+
+## Qualidade e evidências
+
+- [Matriz de rastreabilidade](docs/rtm.md) e [status dos requisitos](docs/status-requisitos.md);
+- [Plano e relatório de testes](docs/testes/plano-testes.md) e [relatório final de testes](docs/testes/relatorio-testes.md);
+- [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/indice.md);
+- [Plano JMeter](docs/performance/plano-jmeter.md) e [resultado de performance](docs/performance/resultado-jmeter.md);
+- [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/entrega/relatorio-final-qualidade.md).
