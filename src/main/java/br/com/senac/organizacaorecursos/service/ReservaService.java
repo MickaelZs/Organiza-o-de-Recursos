@@ -89,14 +89,18 @@ public class ReservaService {
         Usuario usuario = usuarioSolicitante(emailAutenticado);
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
+        StatusReserva estadoAnterior = reserva.getStatus();
         Recurso recurso = bloquearRecursosParaAtualizacao(reserva, request);
-        if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(reserva.getStatus())) {
+        if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(estadoAnterior)) {
             verificarConflito(emailAutenticado, recurso, request, reserva.getId());
         }
-        StatusReserva status = reserva.getStatus() == StatusReserva.SOLICITADA
-                || reserva.getStatus() == StatusReserva.APROVADA ? statusInicial(recurso) : reserva.getStatus();
+        StatusReserva status = estadoAnterior == StatusReserva.SOLICITADA
+                || estadoAnterior == StatusReserva.APROVADA ? statusInicial(recurso) : estadoAnterior;
         reserva.atualizar(recurso.sala(), recurso.professor(), recurso.material(), request.inicio(), request.termino(), status);
-        return reservaRepository.save(reserva);
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "ALTERADA",
+                estadoAnterior.name(), salva.getStatus().name(), "Reserva alterada");
+        return salva;
     }
 
     @Transactional
@@ -177,8 +181,12 @@ public class ReservaService {
     @Transactional
     public void cancelar(Long id, String emailAutenticado) {
         Usuario usuario = usuarioSolicitante(emailAutenticado);
-        Reserva reserva = reservaRepository.findById(id).orElseThrow(ReservaNotFoundException::new);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
+        if (reserva.getStatus() != StatusReserva.SOLICITADA
+                && reserva.getStatus() != StatusReserva.APROVADA) {
+            throw new ReservaEstadoInvalidoException();
+        }
         StatusReserva anterior = reserva.getStatus();
         reserva.cancelar();
         Reserva salva = reservaRepository.save(reserva);

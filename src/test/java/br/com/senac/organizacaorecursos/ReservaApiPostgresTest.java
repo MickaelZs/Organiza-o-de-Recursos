@@ -446,6 +446,16 @@ class ReservaApiPostgresTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @ParameterizedTest
+    @MethodSource("statusesQueNaoPodemSerCancelados")
+    void naoPermiteCancelarReservaJaIniciadaOuConcluida(StatusReserva status) throws Exception {
+        Reserva reserva = salvarReserva(solicitante, sala, null, null, status);
+
+        mockMvc.perform(delete("/api/reservas/" + reserva.getId())
+                        .header("Authorization", token(solicitante)))
+                .andExpect(status().isConflict());
+    }
+
     @Test
     void cancelaReservaPropriaSemApagaLaERejeitaCancelamentoAlheio() throws Exception {
         Reserva propria = salvarReserva(solicitante, sala, null, null);
@@ -535,5 +545,9 @@ class ReservaApiPostgresTest {
     private static Stream<Arguments> statusesQueNaoBloqueiam() {
         return Stream.of(StatusReserva.REJEITADA, StatusReserva.CANCELADA, StatusReserva.NAO_COMPARECEU)
                 .map(Arguments::of);
+    }
+
+    private static Stream<Arguments> statusesQueNaoPodemSerCancelados() {
+        return Stream.of(StatusReserva.EM_USO, StatusReserva.CONCLUIDA).map(Arguments::of);
     }
 }

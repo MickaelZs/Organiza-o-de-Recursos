@@ -14,7 +14,7 @@ Sistema acadêmico para gerenciar recursos físicos e humanos, reservas e os flu
 | RF-08 | Bloqueio de recursos em manutenção | IMPLEMENTADO |
 | RF-09 | Retirada e devolução | IMPLEMENTADO |
 | RF-10 | Histórico auditável de mudanças | IMPLEMENTADO |
-| RF-11 | Notificações persistidas e consultáveis | IMPLEMENTADO |
+| RF-11 | Notificações simuladas internas, persistidas e consultáveis | IMPLEMENTADO |
 | RF-12 | Relatórios de utilização, carga horária e conflitos evitados | IMPLEMENTADO |
 | RF-13 | Interface REST e mensagens de erro compreensíveis | IMPLEMENTADO |
 | RF-14 | Documentação da API e dos fluxos públicos | IMPLEMENTADO |
@@ -25,7 +25,7 @@ RF12 é atendido por três consultas REST com período obrigatório: utilizaçã
 
 ## Interpretação de RF13
 
-O sistema entregue é backend/API. Portanto, “interface” foi tratado como contrato REST, códigos HTTP e tratamento global de erros. Não foi criado frontend visual porque não há requisito documentado para React, HTML, Thymeleaf ou dashboard.
+O sistema entregue possui uma interface web estática em HTML/CSS/JavaScript, além da API REST. Não há framework frontend separado; os painéis consomem os endpoints existentes e respeitam o perfil do JWT.
 
 ## Fonte de verdade
 

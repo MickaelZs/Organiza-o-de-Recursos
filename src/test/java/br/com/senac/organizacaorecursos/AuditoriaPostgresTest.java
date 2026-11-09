@@ -3,6 +3,7 @@ package br.com.senac.organizacaorecursos;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import br.com.senac.organizacaorecursos.entity.Material;
@@ -116,6 +117,26 @@ class AuditoriaPostgresTest {
                 .andExpect(status().isConflict());
 
         assertThat(auditoriaRepository.findAllByOrderByCriadoEmDesc()).filteredOn(auditoria -> auditoria.getAcao().equals("RETIRADA")).hasSize(1);
+    }
+
+    @Test
+    void registraAlteracaoDeReservaNoHistorico() throws Exception {
+        Reserva reserva = reservaRepository.saveAndFlush(new Reserva(solicitante, null, null, material,
+                OffsetDateTime.now().plusHours(1), OffsetDateTime.now().plusHours(2), StatusReserva.APROVADA));
+
+        mockMvc.perform(put("/api/reservas/{id}", reserva.getId())
+                        .header("Authorization", token(solicitante))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"materialId\":" + material.getId()
+                                + ",\"inicio\":\"2026-11-04T11:00:00-03:00\""
+                                + ",\"termino\":\"2026-11-04T12:00:00-03:00\"}"))
+                .andExpect(status().isOk());
+
+        assertThat(auditoriaRepository.findAllByOrderByCriadoEmDesc()).anySatisfy(auditoria -> {
+            assertThat(auditoria.getAcao()).isEqualTo("ALTERADA");
+            assertThat(auditoria.getEstadoAnterior()).isEqualTo("APROVADA");
+            assertThat(auditoria.getEstadoPosterior()).isEqualTo("APROVADA");
+        });
     }
 
     private Usuario salvarUsuario(String email, Perfil perfil) {

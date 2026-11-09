@@ -1,9 +1,12 @@
 package br.com.senac.organizacaorecursos;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Usuario;
@@ -16,6 +19,8 @@ import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
 import br.com.senac.organizacaorecursos.service.ReservaService;
+import br.com.senac.organizacaorecursos.service.RelatorioService;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,6 +44,7 @@ class InterfaceErrosIntegrationTest {
     @MockBean private AuditoriaRepository auditoriaRepository;
     @MockBean private NotificacaoRepository notificacaoRepository;
     @MockBean private RelatorioRepository relatorioRepository;
+    @MockBean private RelatorioService relatorioService;
 
     @Test
     void disponibilizaInterfaceEAssetsSemAbrirRotasDaApi() throws Exception {
@@ -49,7 +55,10 @@ class InterfaceErrosIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/app.js")));
         mockMvc.perform(get("/styles.css")).andExpect(status().isOk());
         mockMvc.perform(get("/app.js")).andExpect(status().isOk());
-        mockMvc.perform(get("/swagger-ui.html")).andExpect(status().isOk());
+        mockMvc.perform(get("/swagger-ui.html"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/swagger-ui/index.html"));
+        mockMvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
         mockMvc.perform(get("/api-docs")).andExpect(status().isOk());
         mockMvc.perform(get("/api/reservas")).andExpect(status().isUnauthorized());
     }
@@ -96,6 +105,21 @@ class InterfaceErrosIntegrationTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Requisicao invalida."));
+    }
+
+    @Test
+    void padronizaErroInternoSemExporStackTrace() throws Exception {
+        when(relatorioService.utilizacao(any(OffsetDateTime.class), any(OffsetDateTime.class)))
+                .thenThrow(new IllegalStateException("falha interna simulada"));
+
+        mockMvc.perform(get("/api/relatorios/utilizacao")
+                        .param("inicio", "2026-11-04T09:00:00-03:00")
+                        .param("termino", "2026-11-04T10:00:00-03:00")
+                        .header("Authorization", token(Perfil.RESPONSAVEL)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.message").value("Erro interno inesperado."))
+                .andExpect(jsonPath("$.trace").doesNotExist());
     }
 
     private String token(Perfil perfil) {
