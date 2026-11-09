@@ -110,6 +110,9 @@ public class Reserva {
     }
 
     public void cancelar() {
+        if (status != StatusReserva.SOLICITADA && status != StatusReserva.APROVADA) {
+            throw new IllegalStateException("Reserva fora de SOLICITADA ou APROVADA");
+        }
         this.status = StatusReserva.CANCELADA;
     }
 
