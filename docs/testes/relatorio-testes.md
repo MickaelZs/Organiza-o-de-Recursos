@@ -5,18 +5,19 @@
 A execução final desta auditoria foi realizada com Java 21 e Docker Desktop disponível para o Testcontainers:
 
 ```text
-clean verify
+verify
 Java 21
-192 testes
+204 testes
 0 failures
 0 errors
 0 skipped
 BUILD SUCCESS
-JaCoCo: 93,03% linhas (4.616/4.962)
-JaCoCo: 76,44% branches (266/348)
+JaCoCo: 87,78% linhas (948/1.080)
+JaCoCo: 70,09% branches (300/428)
+JaCoCo check: PASS (mínimos de 80% de linhas e 70% de branches)
 ```
 
-Os contadores foram lidos dos relatórios Surefire e JaCoCo gerados pelo build. Nenhum resultado de CI, SonarCloud ou JMeter é inferido a partir do código.
+Os contadores foram lidos dos relatórios Surefire e JaCoCo gerados pelo build. O gate também foi comprovado com dois testes controlados: elevar cada mínimo para 101% fez o `verify` falhar; os valores oficiais de 80% e 70% permaneceram no `pom.xml`. Nenhum resultado remoto é atribuído à árvore local não publicada.
 
 ## Cobertura por tipo de evidência
 
@@ -33,4 +34,4 @@ Os contadores foram lidos dos relatórios Surefire e JaCoCo gerados pelo build. 
 
 ## Limitações
 
-Não há execução local comprovada de GitHub Actions ou SonarCloud nesta auditoria. O JMeter possui plano e arquivo `.jmx`, mas o resultado de carga permanece pendente até existir ambiente com aplicação, PostgreSQL, credencial de teste e JMeter executável.
+O workflow remoto e o SonarCloud possuem evidência para o commit remoto `d0100a1`, mas essa execução antecede as alterações locais da Etapa 2 e não comprova esta árvore não publicada. A validação remota atual depende de push/autorização posterior. O JMeter possui plano e arquivo `.jmx`, mas o resultado de carga permanece pendente até existir ambiente com aplicação, PostgreSQL, credencial de teste e JMeter executável.

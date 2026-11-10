@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -24,6 +28,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Verify Docker
+        run: docker version
       - name: Verify
         run: ./mvnw -B clean verify
       - name: SonarCloud analysis
@@ -34,6 +40,17 @@ jobs:
           -Dsonar.projectKey="$SONAR_PROJECT_KEY"
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.qualitygate.wait=true
+          -Dsonar.qualitygate.timeout=300
+      - name: SonarCloud configuration status
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "$SONAR_TOKEN" && -n "$SONAR_ORGANIZATION" && -n "$SONAR_PROJECT_KEY" ]]; then
+            echo "SonarCloud credentials and project variables are configured."
+          else
+            echo "::notice::SonarCloud analysis was not executed because SONAR_TOKEN, SONAR_ORGANIZATION, or SONAR_PROJECT_KEY is not configured."
+          fi
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -43,4 +60,4 @@ jobs:
             target/surefire-reports/
             target/failsafe-reports/
             target/site/jacoco/
-          if-no-files-found: warn
+          if-no-files-found: error

@@ -19,7 +19,7 @@
 
 ## Evidência quantitativa
 
-A execução final comprovada foi `clean verify` com Java 21 e Docker Desktop: 192 testes, 0 falhas, 0 erros, 0 ignorados, `BUILD SUCCESS`, 93,03% de linhas (4.616/4.962) e 76,44% de branches (266/348). O relatório detalhado está em `docs/testes/relatorio-testes.md`.
+A execução local comprovada da Etapa 2 foi `verify` com Java 21 e Docker Desktop: 204 testes, 0 falhas, 0 erros, 0 ignorados, `BUILD SUCCESS`, 87,78% de linhas (948/1.080) e 70,09% de branches (300/428), com `jacoco:check` aprovado. O relatório detalhado está em `docs/testes/relatorio-testes.md`.
 
 ## Limites
 

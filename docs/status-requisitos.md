@@ -19,4 +19,4 @@
 
 ## Evidência final
 
-Execução final comprovada: `clean verify` com Java 21 e Docker Desktop, BUILD SUCCESS, 192 testes, 0 falhas, 0 erros, 0 ignorados, 93,03% de linhas (4.616/4.962) e 76,44% de branches (266/348). A matriz detalhada está em `docs/rtm.md` e o relatório está em `docs/testes/relatorio-testes.md`.
+Execução local comprovada da Etapa 2: `verify` com Java 21 e Docker Desktop, BUILD SUCCESS, 204 testes, 0 falhas, 0 erros, 0 ignorados, 87,78% de linhas (948/1.080) e 70,09% de branches (300/428), com `jacoco:check` aprovado. A matriz detalhada está em `docs/rtm.md` e o relatório está em `docs/testes/relatorio-testes.md`.

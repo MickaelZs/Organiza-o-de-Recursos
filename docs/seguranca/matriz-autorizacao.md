@@ -2,7 +2,7 @@
 
 A matriz abaixo corresponde às regras reais de `SecurityConfig` e às verificações de ownership dos services.
 
-Evidência final: `clean verify` com Java 21 e Docker Desktop, 192 testes, 0 falhas, 0 erros, 0 ignorados, BUILD SUCCESS. O relatório está em `docs/testes/relatorio-testes.md`.
+Evidência local da Etapa 2: `verify` com Java 21 e Docker Desktop, 204 testes, 0 falhas, 0 erros, 0 ignorados, BUILD SUCCESS. O relatório está em `docs/testes/relatorio-testes.md`.
 
 | Operação | Anônimo | SOLICITANTE | RESPONSAVEL | ADMIN |
 |---|---:|---:|---:|---:|

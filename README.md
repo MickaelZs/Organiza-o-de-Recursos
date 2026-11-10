@@ -45,6 +45,51 @@ Linux/macOS:
 Health check: `GET /api/health`. A especificação OpenAPI fica disponível em `/swagger-ui.html`.
 Interface web responsiva: `/`.
 
+### Primeiro acesso ao sistema
+
+Este procedimento cria o primeiro ADMIN apenas em um banco PostgreSQL local novo. O comando recusa URLs remotas, URLs com credenciais/parametrização e bancos que já tenham objetos de aplicação; não remova dados para contornar essa proteção.
+
+Pré-requisitos: Java 21, Maven Wrapper, PostgreSQL local em execução e permissão para criar/usar um banco vazio. No PowerShell, crie o banco vazio (ajuste `psql`/credenciais conforme sua instalação):
+
+```powershell
+createdb -h localhost -p 5432 -U postgres organizacao_recursos
+$env:DB_URL = 'jdbc:postgresql://localhost:5432/organizacao_recursos'
+$env:DB_USERNAME = 'postgres'
+.\mvnw.cmd -B -DskipTests package
+java -jar .\target\organizacao-recursos-0.0.1-SNAPSHOT.jar --bootstrap-admin
+```
+
+O comando solicita interativamente o nome, e-mail, senha do ADMIN e senha do PostgreSQL. As senhas são digitadas sem eco; a senha do administrador precisa ter ao menos 12 caracteres. Não passe senhas como argumentos nem as grave em arquivos versionados. O comando verifica que o banco não contém objetos de aplicação antes de iniciar o Spring/Flyway. As migrations são aplicadas automaticamente somente após essa verificação; a transação e um lock advisory PostgreSQL impedem duas inicializações simultâneas e qualquer banco que já tenha usuário é preservado sem alterações pelo serviço.
+
+Após a mensagem de sucesso, configure as credenciais normais da aplicação. Gere um segredo JWT local aleatório em Base64 e informe a senha do banco como variável de ambiente:
+
+```powershell
+$bytes = New-Object byte[] 32
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+    $rng.GetBytes($bytes)
+}
+finally {
+    $rng.Dispose()
+}
+$env:JWT_SECRET = [Convert]::ToBase64String($bytes)
+[Array]::Clear($bytes, 0, $bytes.Length)
+$env:JWT_EXPIRATION = 'PT2H'
+$secureDbPassword = Read-Host 'Senha do PostgreSQL' -AsSecureString
+$dbPasswordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureDbPassword)
+try {
+    $env:DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($dbPasswordPointer)
+}
+finally {
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($dbPasswordPointer)
+}
+.\mvnw.cmd spring-boot:run
+```
+
+Abra `http://localhost:8080/` e entre com o e-mail e a senha escolhidos no bootstrap. O segredo JWT precisa ser fornecido novamente sempre que iniciar o backend; não o compartilhe nem o versione.
+
+Erros comuns: confirme que `DB_URL` aponta para `localhost` ou `127.0.0.1`, contém porta e nome do banco, e não inclui credenciais; confirme `DB_USERNAME` e a senha do PostgreSQL. Se o comando disser que o banco não está vazio ou que já existe usuário, interrompa e selecione/crie um banco local novo — não apague tabelas ou usuários para repetir o processo. Se as senhas digitadas não coincidirem, execute novamente apenas se o banco continuar vazio. A execução requer terminal interativo para impedir que a senha seja exibida.
+
 ## Fluxos e endpoints principais
 
 - Autenticação: `POST /api/auth/login`;
@@ -82,7 +127,7 @@ Flyway aplica, em ordem, V1 a V10. V8 cria os campos de retirada/devolução, V9
 
 No Windows, use `./mvnw.cmd -B clean verify`. Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2.
 
-Evidência final desta auditoria: `clean verify` executado com Java 21 e Docker Desktop terminou em `BUILD SUCCESS`, com 192 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo registrou 4.616/4.962 linhas cobertas (93,03%) e 266/348 branches cobertos (76,44%), acima das metas de 80% e 70%. O detalhamento está em [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md).
+Evidência local da Etapa 2: `verify` executado com Java 21 e Docker Desktop terminou em `BUILD SUCCESS`, com 204 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo registrou 948/1.080 linhas (87,78%) e 300/428 branches (70,09%), acima das metas obrigatórias de 80% e 70%; o `jacoco:check` foi executado no `verify`. O detalhamento está em [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md). A análise SonarCloud depende das credenciais externas do workflow e não é atribuída a esta árvore local não publicada.
 
 ## Estrutura
 

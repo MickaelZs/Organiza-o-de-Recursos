@@ -15,9 +15,11 @@ import br.com.senac.organizacaorecursos.repository.ProfessorRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.RelatorioRepository;
 import br.com.senac.organizacaorecursos.security.JwtService;
+import br.com.senac.organizacaorecursos.service.AdminBootstrapService;
 import br.com.senac.organizacaorecursos.service.ReservaService;
 import java.time.Duration;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.provider.Arguments;
@@ -44,6 +46,9 @@ class SecurityAuthorizationIntegrationTest {
 
     @MockBean
     private UsuarioRepository usuarioRepository;
+
+    @MockBean
+    private AdminBootstrapService adminBootstrapService;
 
     @MockBean
     private SalaRepository salaRepository;
@@ -75,6 +80,13 @@ class SecurityAuthorizationIntegrationTest {
             mockMvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(payload))
                     .andExpect(status().isBadRequest());
         }
+    }
+
+    @Test
+    void usuarioAnonimoNaoPodeAcessarRotaDeBootstrapAdministrativo() throws Exception {
+        mockMvc.perform(post("/api/auth/bootstrap").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"admin@senac.br\",\"senha\":\"senha\"}"))
+                .andExpect(status().isUnauthorized());
     }
 
     @ParameterizedTest(name = "{0}")
