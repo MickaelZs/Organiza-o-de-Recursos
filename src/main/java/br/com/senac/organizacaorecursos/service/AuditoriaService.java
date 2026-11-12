@@ -54,19 +54,13 @@ public class AuditoriaService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Auditoria registrarConflitoEvitado(String emailAutenticado, String tipoRecurso, Long recursoId,
-                                              String detalhes) {
+                                              Map<String, Object> detalhes) {
         Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
                 .filter(Usuario::getAtivo)
                 .orElseThrow(ReservaOwnershipException::new);
         return auditoriaRepository.save(new Auditoria(
                 usuario, "RECURSO", recursoId, "CONFLITO_EVITADO", null, null,
-                "Conflito evitado para " + tipoRecurso + ": " + detalhes, OffsetDateTime.now()));
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Auditoria registrarConflitoEvitado(String emailAutenticado, String tipoRecurso, Long recursoId,
-                                              Map<String, Object> detalhes) {
-        return registrarConflitoEvitado(emailAutenticado, tipoRecurso, recursoId, serializarDetalhes(detalhes));
+                "Conflito evitado para " + tipoRecurso + ": " + serializarDetalhes(detalhes), OffsetDateTime.now()));
     }
 
     @Transactional(readOnly = true)

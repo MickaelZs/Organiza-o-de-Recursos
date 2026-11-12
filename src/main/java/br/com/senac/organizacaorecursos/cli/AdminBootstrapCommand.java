@@ -21,6 +21,7 @@ import org.springframework.core.env.MapPropertySource;
 public final class AdminBootstrapCommand {
     private static final String JDBC_PREFIX = "jdbc:";
     private static final String POSTGRES_PREFIX = "jdbc:postgresql://";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private AdminBootstrapCommand() {
     }
@@ -136,7 +137,7 @@ public final class AdminBootstrapCommand {
     private static void iniciarAplicacao(String databaseUrl, String usuarioBanco, char[] senhaBanco,
                                          String nome, String email, char[] senha) {
         byte[] jwtSecretBytes = new byte[32];
-        new SecureRandom().nextBytes(jwtSecretBytes);
+        SECURE_RANDOM.nextBytes(jwtSecretBytes);
         String jwtSecret = Base64.getEncoder().encodeToString(jwtSecretBytes);
         Arrays.fill(jwtSecretBytes, (byte) 0);
 
