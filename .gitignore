@@ -25,3 +25,9 @@ coverage/
 *.tmp
 *.swp
 boot-error*.txt
+
+# JMeter CLI logs may contain command-line property values.
+/=target/
+
+# Local JMeter authentication material must never be versioned.
+*.token

@@ -16,7 +16,9 @@ import br.com.senac.organizacaorecursos.repository.ReservaRepository;
 import br.com.senac.organizacaorecursos.repository.SalaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,7 +72,7 @@ public class ManutencaoService {
                 OffsetDateTime.now(),
                 StatusManutencao.ATIVA));
         auditoriaService.registrar(emailAutenticado, "MANUTENCAO", manutencao.getId(), "CRIADA",
-                null, manutencao.getStatus().name(), "Manutencao criada");
+                null, manutencao.getStatus().name(), detalhesManutencao("CRIADA", null, manutencao));
         notificacaoService.criarParaUsuario(responsavel.getEmail(), "MANUTENCAO_CRIADA",
                 "A manutencao foi registrada no sistema.", "MANUTENCAO", manutencao.getId());
         return manutencao;
@@ -112,10 +114,11 @@ public class ManutencaoService {
             throw new ManutencaoOwnershipException();
         }
         StatusManutencao anterior = manutencao.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotManutencao(manutencao);
         manutencao.cancelar();
         Manutencao salva = manutencaoRepository.save(manutencao);
         auditoriaService.registrar(emailAutenticado, "MANUTENCAO", salva.getId(), "CANCELADA",
-                anterior.name(), salva.getStatus().name(), "Manutencao cancelada");
+                anterior.name(), salva.getStatus().name(), detalhesManutencao("CANCELADA", snapshotAnterior, salva));
         notificacaoService.criarParaUsuario(salva.getResponsavel().getEmail(), "MANUTENCAO_CANCELADA",
                 "A manutencao foi cancelada.", "MANUTENCAO", salva.getId());
         return salva;
@@ -166,10 +169,56 @@ public class ManutencaoService {
                 inicio, termino, StatusManutencao.ATIVA, idExcluido);
 
         if (conflitoReserva || conflitoManutencao) {
+            Map<String, Object> detalhes = new LinkedHashMap<>();
+            detalhes.put("operacao", "CONFLITO_EVITADO");
+            detalhes.put("origem", "MANUTENCAO");
+            detalhes.put("recurso", snapshotRecurso(recurso));
+            detalhes.put("inicio", inicio);
+            detalhes.put("termino", termino);
+            detalhes.put("conflitoReserva", conflitoReserva);
+            detalhes.put("conflitoManutencao", conflitoManutencao);
             auditoriaService.registrarConflitoEvitado(emailAutenticado, tipoDoRecurso(recurso).name(),
-                    idDoRecurso(recurso), "Conflito de horario evitado em manutencao.");
+                    idDoRecurso(recurso), detalhes);
             throw new ManutencaoConflitoException();
         }
+    }
+
+    private Map<String, Object> detalhesManutencao(String operacao, Map<String, Object> anterior,
+                                                    Manutencao posterior) {
+        Map<String, Object> detalhes = new LinkedHashMap<>();
+        detalhes.put("operacao", operacao);
+        detalhes.put("antes", anterior);
+        detalhes.put("depois", snapshotManutencao(posterior));
+        return detalhes;
+    }
+
+    private Map<String, Object> snapshotManutencao(Manutencao manutencao) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("manutencaoId", manutencao.getId());
+        snapshot.put("status", manutencao.getStatus());
+        snapshot.put("recurso", snapshotRecurso(new Recurso(manutencao.getSala(), manutencao.getProfessor(),
+                manutencao.getMaterial())));
+        snapshot.put("inicio", manutencao.getInicio());
+        snapshot.put("termino", manutencao.getTermino());
+        snapshot.put("motivo", manutencao.getMotivo());
+        return snapshot;
+    }
+
+    private Map<String, Object> snapshotRecurso(Recurso recurso) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("tipo", tipoDoRecurso(recurso));
+        snapshot.put("id", idDoRecurso(recurso));
+        if (recurso.sala() != null) {
+            snapshot.put("nome", recurso.sala().getNome());
+            snapshot.put("categoria", recurso.sala().getTipo());
+        } else if (recurso.professor() != null) {
+            snapshot.put("nome", recurso.professor().getNome());
+            snapshot.put("categoria", recurso.professor().getCompetencia());
+        } else {
+            snapshot.put("nome", recurso.material().getNome());
+            snapshot.put("categoria", recurso.material().getTipo());
+        }
+        return snapshot;
     }
 
     private Long idDoRecurso(Recurso recurso) {

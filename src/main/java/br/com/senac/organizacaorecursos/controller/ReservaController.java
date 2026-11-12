@@ -51,6 +51,11 @@ public class ReservaController {
         return ReservaResponse.from(reservaService.registrarDevolucao(id, authentication.getName()));
     }
 
+    @PostMapping("/{id}/nao-compareceu")
+    public ReservaResponse registrarNaoComparecimento(@PathVariable Long id, Authentication authentication) {
+        return ReservaResponse.from(reservaService.registrarNaoComparecimento(id, authentication.getName()));
+    }
+
     @GetMapping
     public List<ReservaResponse> listar(Authentication authentication) {
         return reservaService.listar(authentication.getName()).stream().map(ReservaResponse::from).toList();

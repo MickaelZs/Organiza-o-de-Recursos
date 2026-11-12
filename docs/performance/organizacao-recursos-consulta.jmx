@@ -2,7 +2,7 @@
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
     <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Organização de Recursos - consulta de salas" enabled="true">
-      <stringProp name="TestPlan.comments">Plano versionável; informe authToken e baseUrl por propriedades -J.</stringProp>
+      <stringProp name="TestPlan.comments">Plano versionável; defina JMETER_AUTH_TOKEN no ambiente e informe baseUrl por -J.</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments">
@@ -14,7 +14,7 @@
           </elementProp>
           <elementProp name="authToken" elementType="Argument">
             <stringProp name="Argument.name">authToken</stringProp>
-            <stringProp name="Argument.value">${__P(authToken,COLOQUE_UM_JWT_DE_TESTE)}</stringProp>
+            <stringProp name="Argument.value">${__env(JMETER_AUTH_TOKEN,)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>

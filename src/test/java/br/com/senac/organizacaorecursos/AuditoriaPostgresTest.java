@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.senac.organizacaorecursos.entity.Material;
 import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Reserva;
@@ -59,6 +61,7 @@ class AuditoriaPostgresTest {
     @Autowired private MaterialRepository materialRepository;
     @Autowired private AuditoriaRepository auditoriaRepository;
     @Autowired private NotificacaoRepository notificacaoRepository;
+    @Autowired private ObjectMapper objectMapper;
 
     private Usuario solicitante;
     private Usuario responsavel;
@@ -136,6 +139,17 @@ class AuditoriaPostgresTest {
             assertThat(auditoria.getAcao()).isEqualTo("ALTERADA");
             assertThat(auditoria.getEstadoAnterior()).isEqualTo("APROVADA");
             assertThat(auditoria.getEstadoPosterior()).isEqualTo("APROVADA");
+            try {
+                JsonNode detalhes = objectMapper.readTree(auditoria.getDetalhes());
+                assertThat(detalhes.path("operacao").asText()).isEqualTo("ALTERADA");
+                assertThat(detalhes.path("antes").path("recurso").path("id").asLong())
+                        .isEqualTo(material.getId());
+                assertThat(OffsetDateTime.parse(detalhes.path("depois").path("inicio").asText()).toInstant())
+                        .isEqualTo(OffsetDateTime.parse("2026-11-04T11:00:00-03:00").toInstant());
+                assertThat(auditoria.getDetalhes()).doesNotContain("senha", "token", "jwt");
+            } catch (Exception exception) {
+                throw new AssertionError("Auditoria estruturada invalida", exception);
+            }
         });
     }
 

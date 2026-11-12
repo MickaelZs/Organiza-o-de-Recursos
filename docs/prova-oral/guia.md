@@ -28,9 +28,17 @@ O serviço bloqueia pessimisticamente a linha do recurso antes de consultar conf
 - JUnit 5, unitários, parametrizados e integração;
 - API caixa-preta e E2E semântico via MockMvc + PostgreSQL;
 - Testcontainers usa PostgreSQL real;
-- RF08 preserva TDD RED/GREEN nos commits `7948ce7` e `6a758d2`;
-- JaCoCo é gerado no `verify`;
-- GitHub Actions executa `clean verify` em push/PR;
-- SonarCloud está configurado condicionalmente, mas depende de secret e variáveis do repositório;
-- JMeter tem plano versionado e execução pendente;
+- RF08 preserva TDD RED/GREEN em `7948ce7` (04/11/2026, testes RED de manutenção) seguido de `6a758d2` (04/11/2026, implementação de manutenção); esses commits são históricos e não o HEAD atual;
+- JaCoCo é gerado no `verify`; no commit 3426e51, clone limpo teve 90,01% LINE e 72,07% BRANCH, e o artifact CI teve 89,84%/72,07%;
+- GitHub Actions executou `clean verify` para o commit 3426e51, com 214 testes, zero falhas/erros/ignorados;
+- SonarCloud aprovou o PR #9 no mesmo commit: Quality Gate OK e Reliability A no código novo;
+- JMeter tem planos versionados e relatórios históricos; a execução desta auditoria não foi repetida porque não havia JMeter nem JTL/HTML disponíveis. Não use os números antigos como resultado do commit atual;
 - WireMock não é aplicável porque não há integração HTTP externa.
+
+## Estado para a apresentação
+
+O PR #9 continua aberto e sem review registrado. O build e o SonarCloud estão
+verdes na branch, mas isso não equivale a CI em main nem à autorização de
+release. A execução JMeter atual, inspeção visual, decisão assinada do grupo e
+revisão por pares permanecem pendentes; consulte o
+[relatório de qualidade](../relatorio-qualidade.md).

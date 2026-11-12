@@ -3,6 +3,7 @@ package br.com.senac.organizacaorecursos.config;
 import br.com.senac.organizacaorecursos.exception.ApiError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,6 +29,7 @@ public class SecurityConfig {
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -44,7 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/reservas/*/aprovar", "/api/reservas/*/rejeitar").hasRole("RESPONSAVEL")
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                "/api/reservas/*/retirada", "/api/reservas/*/devolucao").hasAnyRole("RESPONSAVEL", "ADMIN")
+                                "/api/reservas/*/retirada", "/api/reservas/*/devolucao",
+                                "/api/reservas/*/nao-compareceu").hasAnyRole("RESPONSAVEL", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/reservas").hasRole("SOLICITANTE")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/reservas/**").hasRole("SOLICITANTE")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/reservas/**").hasRole("SOLICITANTE")

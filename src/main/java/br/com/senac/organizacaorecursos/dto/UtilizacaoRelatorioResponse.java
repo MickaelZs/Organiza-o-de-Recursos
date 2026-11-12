@@ -9,4 +9,5 @@ public record UtilizacaoRelatorioResponse(
         OffsetDateTime termino,
         Long totalReservas,
         BigDecimal totalHorasUtilizadas,
-        List<UtilizacaoPorTipoResponse> porTipoRecurso) { }
+        List<UtilizacaoPorTipoResponse> porTipoRecurso,
+        List<UtilizacaoPorRecursoResponse> porRecurso) { }

@@ -12,6 +12,8 @@ Projeto acadêmico da disciplina de Qualidade de Software para gerenciamento de 
 
 ## Pré-requisitos e configuração
 
+O passo a passo completo está no [guia de instalação](docs/guia-instalacao.md).
+
 - Java 21;
 - Docker Desktop em execução para os testes PostgreSQL/Testcontainers;
 - PostgreSQL para executar a aplicação fora dos testes.
@@ -45,17 +47,70 @@ Linux/macOS:
 Health check: `GET /api/health`. A especificação OpenAPI fica disponível em `/swagger-ui.html`.
 Interface web responsiva: `/`.
 
+## Qualidade e arquitetura
+
+Consulte a [RTM](docs/rtm.md), a [análise ATAM preliminar](docs/atam.md) e o
+[relatório de qualidade](docs/relatorio-qualidade.md) para rastreabilidade,
+cenários e evidências da auditoria.
+
+### Primeiro acesso ao sistema
+
+Este procedimento cria o primeiro ADMIN apenas em um banco PostgreSQL local novo. O comando recusa URLs remotas, URLs com credenciais/parametrização e bancos que já tenham objetos de aplicação; não remova dados para contornar essa proteção.
+
+Pré-requisitos: Java 21, Maven Wrapper, PostgreSQL local em execução e permissão para criar/usar um banco vazio. No PowerShell, crie o banco vazio (ajuste `psql`/credenciais conforme sua instalação):
+
+```powershell
+createdb -h localhost -p 5432 -U postgres organizacao_recursos
+$env:DB_URL = 'jdbc:postgresql://localhost:5432/organizacao_recursos'
+$env:DB_USERNAME = 'postgres'
+.\mvnw.cmd -B -DskipTests package
+java -jar .\target\organizacao-recursos-0.0.1-SNAPSHOT.jar --bootstrap-admin
+```
+
+O comando solicita interativamente o nome, e-mail, senha do ADMIN e senha do PostgreSQL. As senhas são digitadas sem eco; a senha do administrador precisa ter ao menos 12 caracteres. Não passe senhas como argumentos nem as grave em arquivos versionados. O comando verifica que o banco não contém objetos de aplicação antes de iniciar o Spring/Flyway. As migrations são aplicadas automaticamente somente após essa verificação; a transação e um lock advisory PostgreSQL impedem duas inicializações simultâneas e qualquer banco que já tenha usuário é preservado sem alterações pelo serviço.
+
+Após a mensagem de sucesso, configure as credenciais normais da aplicação. Gere um segredo JWT local aleatório em Base64 e informe a senha do banco como variável de ambiente:
+
+```powershell
+$bytes = New-Object byte[] 32
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+    $rng.GetBytes($bytes)
+}
+finally {
+    $rng.Dispose()
+}
+$env:JWT_SECRET = [Convert]::ToBase64String($bytes)
+[Array]::Clear($bytes, 0, $bytes.Length)
+$env:JWT_EXPIRATION = 'PT2H'
+$secureDbPassword = Read-Host 'Senha do PostgreSQL' -AsSecureString
+$dbPasswordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureDbPassword)
+try {
+    $env:DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($dbPasswordPointer)
+}
+finally {
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($dbPasswordPointer)
+}
+.\mvnw.cmd spring-boot:run
+```
+
+Abra `http://localhost:8080/` e entre com o e-mail e a senha escolhidos no bootstrap. O segredo JWT precisa ser fornecido novamente sempre que iniciar o backend; não o compartilhe nem o versione.
+
+Erros comuns: confirme que `DB_URL` aponta para `localhost` ou `127.0.0.1`, contém porta e nome do banco, e não inclui credenciais; confirme `DB_USERNAME` e a senha do PostgreSQL. Se o comando disser que o banco não está vazio ou que já existe usuário, interrompa e selecione/crie um banco local novo — não apague tabelas ou usuários para repetir o processo. Se as senhas digitadas não coincidirem, execute novamente apenas se o banco continuar vazio. A execução requer terminal interativo para impedir que a senha seja exibida.
+
 ## Fluxos e endpoints principais
 
 - Autenticação: `POST /api/auth/login`;
 - Recursos: `/api/salas`, `/api/professores` e `/api/materiais`;
-- Reservas: `/api/reservas`, aprovação/rejeição e retirada/devolução;
+- Reservas: `/api/reservas`, aprovação/rejeição, retirada/devolução e registro operacional de não comparecimento (`POST /api/reservas/{id}/nao-compareceu`);
 - Manutenção: `/api/manutencoes`;
 - Auditoria: `GET /api/auditorias`;
 - Notificações: `GET /api/notificacoes` e `PATCH /api/notificacoes/{id}/lida`;
 - Relatórios: `GET /api/relatorios/utilizacao`, `/carga-horaria` e `/conflitos-evitados`.
 
-Os relatórios exigem `inicio` e `termino` em ISO-8601 com offset e usam o intervalo semiaberto `[inicio, termino)`. RESPONSAVEL e ADMIN podem consultá-los. A especificação detalhada está em [docs/api-relatorios.md](docs/api-relatorios.md).
+O catálogo completo de endpoints, perfis, payloads e transições está em [docs/api-fluxos.md](docs/api-fluxos.md).
+
+Os relatórios exigem `inicio` e `termino` em ISO-8601 com offset e usam o intervalo semiaberto `[inicio, termino)`. RESPONSAVEL e ADMIN podem consultá-los. Utilização detalha cada recurso e carga horária detalha professores alocados, sem incluir estados não efetivados. A especificação detalhada está em [docs/api-relatorios.md](docs/api-relatorios.md).
 
 ## Perfis e segurança
 
@@ -78,22 +133,35 @@ Flyway aplica, em ordem, V1 a V10. V8 cria os campos de retirada/devolução, V9
 ```bash
 ./mvnw -B test
 ./mvnw -B clean verify
+java scripts/ValidateRtm.java
 ```
 
-No Windows, use `./mvnw.cmd -B clean verify`. Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2.
+No Windows PowerShell, use:
 
-Evidência final desta auditoria: `clean verify` executado com Java 21 e Docker Desktop terminou em `BUILD SUCCESS`, com 192 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo registrou 4.616/4.962 linhas cobertas (93,03%) e 266/348 branches cobertos (76,44%), acima das metas de 80% e 70%. O detalhamento está em [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md).
+```powershell
+.\mvnw.cmd -B test
+.\mvnw.cmd -B clean verify
+java scripts\ValidateRtm.java
+```
+
+Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2. O verificador da RTM roda após a suíte para validar links, IDs, fontes, testes, evidências e relatórios Surefire das linhas marcadas `PASS`.
+
+Última validação do commit 3426e518d9993c5db54de088d30773fb60ac1f40 (12/11/2026): clone temporário limpo, Java 21.0.11, Docker Engine 29.9.2 e PostgreSQL 16.15 via Testcontainers; clean verify passou com 214 testes, 0 falhas, 0 erros e 0 ignorados. JaCoCo local: 90,01% LINE e 72,07% BRANCH. O artifact da CI para o mesmo commit reportou 89,84% LINE e 72,07% BRANCH; ambos passam 80/70. GitHub Actions e SonarCloud também passaram no PR #9. Veja o [relatório de testes](docs/testes/relatorio-testes.md) e o [índice de evidências](docs/evidencias/README.md).
+
+Os resultados históricos de etapas anteriores permanecem preservados no [relatório de testes](docs/testes/relatorio-testes.md): registro `d0100a1` (`main`, 08/11/2026) com 192 testes e registro `f58a68e` (09/11/2026) com 204 testes. Eles não devem ser confundidos com os 214 testes da árvore de trabalho auditada em 12/11/2026.
 
 ## Estrutura
 
 O código fica em `src/main/java/br/com/senac/organizacaorecursos`, organizado em `config`, `controller`, `dto`, `entity`, `exception`, `repository`, `security` e `service`. Requisitos, decisões e rastreabilidade ficam em `docs/`.
 
-Interface responsiva: o sistema disponibiliza uma interface web em `/` com acesso por JWT e painéis condicionados ao perfil. A interface consome as APIs existentes; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos. O redirect documentado pelo Springdoc é `/swagger-ui.html` → `/swagger-ui/index.html`.
+Interface: o sistema disponibiliza uma interface web estática em `/` com acesso por JWT e painéis condicionados ao perfil. A inspeção visual manual em resoluções/dispositivos permanece pendente; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos. O redirect documentado pelo Springdoc é `/swagger-ui.html` → `/swagger-ui/index.html`.
 
 ## Qualidade e evidências
 
 - [Matriz de rastreabilidade](docs/rtm.md) e [status dos requisitos](docs/status-requisitos.md);
 - [Plano e relatório de testes](docs/testes/plano-testes.md) e [relatório final de testes](docs/testes/relatorio-testes.md);
-- [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/indice.md);
+- [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/README.md);
 - [Plano JMeter](docs/performance/plano-jmeter.md) e [resultado de performance](docs/performance/resultado-jmeter.md);
-- [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/entrega/relatorio-final-qualidade.md).
+- [Resultado JMeter da auditoria](docs/performance/resultado-01.md);
+- [Checklist da entrega](docs/entrega/checklist.md), [changelog](CHANGELOG.md) e [decisão de qualidade](docs/decisao-qualidade.md);
+- [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/relatorio-qualidade.md).

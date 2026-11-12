@@ -24,7 +24,7 @@ public class ReservaExceptionHandler {
     @ExceptionHandler(ReservaEstadoInvalidoException.class)
     ResponseEntity<ApiError> estadoInvalido(HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiError.of(HttpStatus.CONFLICT, "A reserva nao esta pendente para aprovacao.", request));
+                .body(ApiError.of(HttpStatus.CONFLICT, "A reserva nao esta em um estado valido para esta operacao.", request));
     }
 
     @ExceptionHandler(ReservaNotFoundException.class)
