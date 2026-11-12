@@ -1,5 +1,11 @@
 # Resultado JMeter 01 — 12/11/2026
 
+## Complemento — material e evidências preservadas
+
+Plano [material](organizacao-recursos-material.jmx), derivado do cenário A com `materialId` no corpo, JMeter 5.6.3 e banco PostgreSQL descartável: dez requisições simultâneas resultaram em um HTTP 201 e nove HTTP 409, zero 500; média 194,9 ms, p90 285 ms, p95/p99 304 ms, vazão 32,26 amostras/s. A preparação de manutenção retornou 201. Uma consulta após a carga encontrou zero pares de reservas ativas sobrepostas para cada tipo: sala, professor e material.
+
+As amostras sanitizadas estão em [evidências JMeter](../evidencias/jmeter-2026-11-12/); preservam duração, código e instante relativo, sem URLs, tokens ou dados pessoais. Incluem a execução inválida com quatro 404 e a repetição de professor com dados corrigidos. O cenário material foi executado com `roomId=1`, `otherRoomId=2`, dez threads no grupo A e os demais grupos com zero threads; datas 2027-06-10 10h–11h e manutenção 2027-06-11 10h–11h, offset -03:00. Consulte [plano JMeter](plano-jmeter.md) para variáveis e execução. Cenários B e D ainda carecem de repetição isolada para afirmar seus resultados esperados.
+
 ## Repetição após correção — 12/11/2026
 
 A pilha capturada durante 16 requisições mostrou transações aguardando uma conexão Hikari para auditoria `REQUIRES_NEW` enquanto mantinham outra conexão e locks; cinco requisições retornaram 500 após cerca de 30 segundos. A correção registra o conflito na mesma transação, antes de qualquer mudança de domínio; a transação confirma apenas a auditoria no conflito esperado. Exceções técnicas continuam provocando rollback. Na reprodução corrigida, 16 requisições retornaram 409 em até 1,01 s.

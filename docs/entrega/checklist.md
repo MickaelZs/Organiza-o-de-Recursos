@@ -1,5 +1,10 @@
 # Checklist de entrega em clone limpo
 
+## Complemento operacional
+
+Clone `3d12b9d`: bootstrap em banco novo, health, login e logout confirmados; suite e RTM passaram. A edição de salas, professores e materiais não possui endpoints ou controles no estado atual, e os fluxos visuais completos continuam pendentes. O material foi testado com dez requisições concorrentes; dados sanitizados estão no [índice de evidências](../evidencias/README.md). A decisão de liberação continua bloqueada.
+
+
 ## Correção de contenção — atualização
 
 Teste PostgreSQL com 16 requisições passou e carga combinada repetida teve zero 500. Permanecem pendentes a execução isolada completa dos cenários JMeter, fluxos de navegador, bootstrap em clone limpo, CI/Sonar do commit final e revisão humana. [Resultado](../performance/resultado-01.md).

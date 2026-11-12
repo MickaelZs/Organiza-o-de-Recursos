@@ -1,5 +1,12 @@
 # Índice do pacote de evidências
 
+## Complemento do clone e material
+
+No Chromium, ADMIN cadastrou uma sala, um professor e um material sintéticos e os três apareceram nas respectivas listas. SOLICITANTE filtrou as listas por localização, competência e tipo, respectivamente, e encontrou os três registros. Edição de recursos não foi testada: não há endpoint ou controle correspondente.
+
+Clone limpo `3d12b9d`: Java 21, 215 testes e RTM estrutural aprovados. Em banco novo `qa_clone_final_20261112`, bootstrap interativo do ADMIN terminou com sucesso; aplicação iniciada com Maven Wrapper em porta alternativa, health HTTP 200 e login/logout visual ADMIN aprovados. [Amostras JMeter sanitizadas](jmeter-2026-11-12/) incluem execução de material e os resultados anteriores; [relatório](../performance/resultado-01.md).
+
+
 ## Correção de contenção — evidências locais
 
 215 testes aprovados com Java 21 e gates JaCoCo aprovados; RTM estrutural válida. A reprodução e os resultados JMeter estão em [resultado 01](../performance/resultado-01.md). Os arquivos temporários de execução não são artifacts duráveis. Os checks do commit final e o clone operacional ainda precisam ser verificados.

@@ -1,0 +1,12 @@
+inicio_relativo_ms,duracao_ms,cenario,http,sucesso,latencia_ms
+0,66,Criar manutenção sintética,201,true,62
+161,264,POST reserva mesmo recurso,409,true,264
+162,285,POST reserva mesmo recurso,409,true,285
+160,304,POST reserva mesmo recurso,409,true,304
+163,180,POST reserva mesmo recurso,409,true,175
+162,153,POST reserva mesmo recurso,409,true,153
+156,92,POST reserva mesmo recurso,201,true,92
+166,118,POST reserva mesmo recurso,409,true,118
+158,214,POST reserva mesmo recurso,409,true,214
+159,232,POST reserva mesmo recurso,409,true,232
+154,107,POST reserva mesmo recurso,409,true,107
