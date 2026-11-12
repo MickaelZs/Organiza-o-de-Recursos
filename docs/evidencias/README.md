@@ -1,5 +1,10 @@
 # Índice do pacote de evidências
 
+## Validação dos fluxos obrigatórios
+
+[Fluxos Chromium](interface-fluxos-2026-11-12.md) e [JMeter B e D](../performance/resultado-01.md) registram a execução com dados sintéticos e seus limites. A edição de cadastros de recursos não está explicitada como requisito no escopo fornecido; alteração de reservas foi testada.
+
+
 ## Complemento do clone e material
 
 No Chromium, ADMIN cadastrou uma sala, um professor e um material sintéticos e os três apareceram nas respectivas listas. SOLICITANTE filtrou as listas por localização, competência e tipo, respectivamente, e encontrou os três registros. Edição de recursos não foi testada: não há endpoint ou controle correspondente.

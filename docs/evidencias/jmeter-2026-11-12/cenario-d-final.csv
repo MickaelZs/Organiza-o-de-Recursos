@@ -1,0 +1,6 @@
+inicio_relativo_ms,duracao_ms,cenario,http,sucesso,latencia_ms
+0,66,Criar manutenção sintética,201,true,60
+152,44,POST reserva 10h-11h,201,true,44
+152,56,POST reserva 10h-11h,409,true,56
+375,33,POST reserva 11h-12h,201,true,33
+376,46,POST reserva 11h-12h,409,true,46

@@ -1,5 +1,11 @@
 # Changelog
 
+## Não lançado — validação funcional complementar
+
+- Registrados os fluxos obrigatórios no Chromium, com dados sintéticos, e os cenários JMeter B e D isolados.
+- Reconciliado o escopo: edição de reservas é obrigatória; edição dos cadastros de recursos não é exigência explícita no escopo fornecido.
+
+
 ## Não lançado — correção da contenção de auditoria
 
 - A auditoria de conflito usa a mesma transação antes de mudanças de domínio, evitando esgotamento do pool por transações aninhadas; teste concorrente PostgreSQL adicionado.

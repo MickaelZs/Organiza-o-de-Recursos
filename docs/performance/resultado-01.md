@@ -1,10 +1,16 @@
 # Resultado JMeter 01 — 12/11/2026
 
+## Cenários B e D isolados — 12/11/2026
+
+Banco descartável, JMeter 5.6.3, Java 21, salas sintéticas 1 e 2; os demais grupos desativados. Em B, quatro solicitações para 10/02/2028 10h–11h (-03:00) produziram duas 201 e duas 409 esperadas, zero 500; média 77,8 ms, p90/p95/p99 94 ms, throughput 42,55 amostras/s. Preparação de manutenção em 11/02 retornou 201. Em D, duas threads solicitaram cada intervalo adjacente de 10/03/2028 10h–11h e 11h–12h: em cada intervalo houve uma 201 e uma 409, zero 500. Médias 50 e 39,5 ms; p90/p95/p99 56 e 46 ms; throughput 35,71 e 42,55 amostras/s, respectivamente. Preparação em 11/03 retornou 201. Percentis nearest-rank; throughput pelo primeiro início e última conclusão de cada grupo de amostras. Pequenas amostras verificam regras, não capacidade.
+
+Dados sanitizados: [B](../evidencias/jmeter-2026-11-12/cenario-b-final.csv) e [D](../evidencias/jmeter-2026-11-12/cenario-d-final.csv). Consulta SQL posterior encontrou zero pares de reservas ativas sobrepostas de cada tipo de recurso.
+
 ## Complemento — material e evidências preservadas
 
 Plano [material](organizacao-recursos-material.jmx), derivado do cenário A com `materialId` no corpo, JMeter 5.6.3 e banco PostgreSQL descartável: dez requisições simultâneas resultaram em um HTTP 201 e nove HTTP 409, zero 500; média 194,9 ms, p90 285 ms, p95/p99 304 ms, vazão 32,26 amostras/s. A preparação de manutenção retornou 201. Uma consulta após a carga encontrou zero pares de reservas ativas sobrepostas para cada tipo: sala, professor e material.
 
-As amostras sanitizadas estão em [evidências JMeter](../evidencias/jmeter-2026-11-12/); preservam duração, código e instante relativo, sem URLs, tokens ou dados pessoais. Incluem a execução inválida com quatro 404 e a repetição de professor com dados corrigidos. O cenário material foi executado com `roomId=1`, `otherRoomId=2`, dez threads no grupo A e os demais grupos com zero threads; datas 2027-06-10 10h–11h e manutenção 2027-06-11 10h–11h, offset -03:00. Consulte [plano JMeter](plano-jmeter.md) para variáveis e execução. Cenários B e D ainda carecem de repetição isolada para afirmar seus resultados esperados.
+As amostras sanitizadas estão em [evidências JMeter](../evidencias/jmeter-2026-11-12/); preservam duração, código e instante relativo, sem URLs, tokens ou dados pessoais. Incluem a execução inválida com quatro 404 e a repetição de professor com dados corrigidos. O cenário material foi executado com `roomId=1`, `otherRoomId=2`, dez threads no grupo A e os demais grupos com zero threads; datas 2027-06-10 10h–11h e manutenção 2027-06-11 10h–11h, offset -03:00. Consulte [plano JMeter](plano-jmeter.md) para variáveis e execução. A repetição isolada de B e D está registrada acima.
 
 ## Repetição após correção — 12/11/2026
 

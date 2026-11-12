@@ -2,7 +2,7 @@
 
 ## Complemento operacional
 
-Clone `3d12b9d`: bootstrap em banco novo, health, login e logout confirmados; suite e RTM passaram. A edição de salas, professores e materiais não possui endpoints ou controles no estado atual, e os fluxos visuais completos continuam pendentes. O material foi testado com dez requisições concorrentes; dados sanitizados estão no [índice de evidências](../evidencias/README.md). A decisão de liberação continua bloqueada.
+Clone `3d12b9d`: bootstrap em banco novo, health, login e logout confirmados; suite e RTM passaram. A edição de cadastros de recursos não é requisito explicitado no escopo fornecido; os fluxos operacionais foram exercitados conforme a evidência de interface. O material foi testado com dez requisições concorrentes; dados sanitizados estão no [índice de evidências](../evidencias/README.md). A decisão de liberação permanece sujeita à revisão humana, aos checks do commit final e à integração em main.
 
 
 ## Correção de contenção — atualização

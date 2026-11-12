@@ -1,11 +1,16 @@
 # Decisão de qualidade — rascunho para revisão do grupo
 
-## Atualização técnica — permanece BLOQUEAR
+## Atualização técnica para revisão humana
+
+Os fluxos obrigatórios ensaiados e JMeter B/D foram executados: [interface](evidencias/interface-fluxos-2026-11-12.md), [carga](performance/resultado-01.md). A edição de cadastros de recursos não consta como requisito explícito no escopo fornecido. A decisão coletiva, responsáveis por riscos e assinaturas não foram fornecidos; merge, tag e entrega continuam sujeitos à autorização humana. Os registros históricos abaixo descrevem snapshots anteriores.
+
+
+## Histórico — bloqueio anterior
 
 A contenção do pool foi corrigida e o cenário combinado repetido não produziu 500, mas ainda faltam validações funcionais completas, cenários JMeter isolados, clone operacional e checks do commit final. Aprovações, responsáveis e assinaturas permanecem pendentes.
 
 
-## Decisão técnica atual — BLOQUEAR
+## Histórico — decisão técnica anterior
 
 A carga JMeter de 12/11/2026 produziu quatro HTTP 500; veja [resultado 01](performance/resultado-01.md). Faltam investigação, correção e nova validação, inspeção funcional completa, CI/Sonar no commit final e revisão humana. Não há riscos aceitos nem responsáveis designados. Nomes, contribuições declaradas, aprovação e assinaturas dos integrantes permanecem a confirmar. Nenhuma tag foi autorizada. O histórico abaixo identifica um snapshot anterior.
 
