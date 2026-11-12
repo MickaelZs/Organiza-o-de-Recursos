@@ -1,167 +1,225 @@
 # Organização de Recursos
 
-Projeto acadêmico da disciplina de Qualidade de Software para gerenciamento de salas, professores, materiais/equipamentos, reservas, manutenção, retirada/devolução, auditoria, notificações e relatórios.
+Sistema acadêmico da disciplina de **Qualidade de Software** para organizar o uso de salas, professores e materiais. A aplicação permite consultar disponibilidade, solicitar reservas e acompanhar sua operação, mantendo regras de conflito, permissões por perfil e histórico auditável.
 
-## Tecnologias
+## Sumário
 
-- Java 21 e Spring Boot 3.5;
-- Spring Web, Data JPA, Validation e Security com JWT;
-- PostgreSQL e Flyway;
-- JUnit 5, Mockito e testes parametrizados com Testcontainers/PostgreSQL;
-- JaCoCo e Springdoc/OpenAPI.
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias e arquitetura](#tecnologias-e-arquitetura)
+- [Pré-requisitos](#pré-requisitos)
+- [Instalação no Windows](#instalação-no-windows)
+- [Instalação no Linux e GitHub Codespaces](#instalação-no-linux-e-github-codespaces)
+- [Primeiro acesso e execução](#primeiro-acesso-e-execução)
+- [API](#api)
+- [Testes e qualidade](#testes-e-qualidade)
+- [Testes de carga com JMeter](#testes-de-carga-com-jmeter)
+- [Documentação](#documentação)
+- [Solução de problemas](#solução-de-problemas)
+- [Equipe, contribuição e entrega](#equipe-contribuição-e-entrega)
 
-## Pré-requisitos e configuração
+## Funcionalidades
 
-O passo a passo completo está no [guia de instalação](docs/guia-instalacao.md).
+| Área | Operações |
+|---|---|
+| Acesso | Login com JWT e permissões para `ADMIN`, `RESPONSAVEL` e `SOLICITANTE`. |
+| Recursos | Cadastro e consulta de salas, professores e materiais; filtros por atributos e disponibilidade. |
+| Reservas | Criação, consulta, alteração e cancelamento das próprias reservas; conflitos de horário e proteção contra solicitações simultâneas para o mesmo recurso. |
+| Operação | Aprovação ou rejeição de recursos restritos, manutenção, retirada, devolução e registro de não comparecimento. |
+| Acompanhamento | Auditoria das operações, notificações internas e relatórios de utilização, carga horária e conflitos evitados. |
 
-- Java 21;
-- Docker Desktop em execução para os testes PostgreSQL/Testcontainers;
-- PostgreSQL para executar a aplicação fora dos testes.
+O `ADMIN` cadastra recursos e pode operar manutenção, retirada e devolução. O `RESPONSAVEL` aprova ou rejeita solicitações restritas e realiza operações de manutenção; ambos consultam auditoria e relatórios. O `SOLICITANTE` gerencia as próprias reservas e notificações. As regras completas estão na [matriz de autorização](docs/seguranca/matriz-autorizacao.md) e no [catálogo de fluxos](docs/api-fluxos.md).
 
-Crie um banco `organizacao_recursos` e configure, sem versionar segredos:
+## Tecnologias e arquitetura
 
-```text
-DB_URL=jdbc:postgresql://localhost:5432/organizacao_recursos
-DB_USERNAME=postgres
-DB_PASSWORD=sua-senha-local
-JWT_SECRET=segredo-fornecido-pelo-ambiente
-JWT_EXPIRATION=PT2H
-```
+| Camada ou atividade | Tecnologia |
+|---|---|
+| Aplicação | Java 21, Spring Boot 3.5.6, Spring Web, Spring Data JPA e Bean Validation |
+| Segurança | Spring Security, JWT e BCrypt |
+| Persistência | PostgreSQL e migrations Flyway |
+| Interface | HTML, CSS e JavaScript |
+| Build e testes | Maven Wrapper, JUnit 5, Mockito, Testcontainers e JaCoCo |
+| Carga e integração contínua | Apache JMeter, GitHub Actions e SonarCloud |
+| Documentação da API | Springdoc/OpenAPI |
 
-`JWT_SECRET` é obrigatório e deve ser fornecido pelo ambiente em Base64; a aplicação não possui fallback de segredo. `.env.example` serve apenas como referência com um valor falso.
+A interface estática consome a API HTTP. Controllers recebem e validam as requisições; services aplicam autorização e regras de negócio; repositories acessam as entidades no PostgreSQL. Flyway controla o esquema e o Spring Security protege as rotas. Veja os [diagramas de contexto, componentes e sequências](docs/diagramas/arquitetura.md), a [arquitetura](docs/arquitetura.md) e as [decisões arquiteturais](docs/adr/).
 
-## Executar
+## Pré-requisitos
 
-Windows:
+- Git e **JDK 21**. Confirme `java -version` e ajuste `JAVA_HOME` e `PATH` se necessário.
+- Docker com daemon ativo; no Windows, inicie o Docker Desktop. O Docker também é necessário para os testes com Testcontainers.
+- Maven é fornecido pelo Wrapper (`mvnw`/`mvnw.cmd`); não é necessário instalá-lo separadamente. Na primeira execução, ele pode baixar a distribuição e dependências.
+- Uma porta local livre para o PostgreSQL (os exemplos usam `55432`) e a porta `8080` para a aplicação. No Linux, o exemplo usa `openssl` para gerar o segredo JWT.
 
-```powershell
-.\mvnw.cmd spring-boot:run
-```
+Os exemplos criam **um banco novo** em um container separado, sem recriar ou apagar bancos existentes. Escolha outro nome de container ou porta se já estiverem em uso. O banco inicial é criado pela imagem oficial na primeira inicialização; não reutilize um volume com dados existentes para repetir o bootstrap.
 
-Linux/macOS:
+## Instalação no Windows
 
-```bash
-./mvnw spring-boot:run
-```
-
-Health check: `GET /api/health`. A especificação OpenAPI fica disponível em `/swagger-ui.html`.
-Interface web responsiva: `/`.
-
-## Qualidade e arquitetura
-
-Consulte a [RTM](docs/rtm.md), a [análise ATAM preliminar](docs/atam.md) e o
-[relatório de qualidade](docs/relatorio-qualidade.md) para rastreabilidade,
-cenários e evidências da auditoria.
-
-### Primeiro acesso ao sistema
-
-Este procedimento cria o primeiro ADMIN apenas em um banco PostgreSQL local novo. O comando recusa URLs remotas, URLs com credenciais/parametrização e bancos que já tenham objetos de aplicação; não remova dados para contornar essa proteção.
-
-Pré-requisitos: Java 21, Maven Wrapper, PostgreSQL local em execução e permissão para criar/usar um banco vazio. No PowerShell, crie o banco vazio (ajuste `psql`/credenciais conforme sua instalação):
+Em PowerShell, clone o repositório e entre na pasta:
 
 ```powershell
-createdb -h localhost -p 5432 -U postgres organizacao_recursos
-$env:DB_URL = 'jdbc:postgresql://localhost:5432/organizacao_recursos'
+git clone https://github.com/MickaelZs/Organiza-o-de-Recursos.git
+cd Organiza-o-de-Recursos
+# Para avaliar a branch de trabalho, quando necessário:
+git switch feature/qa-entrega-final
+java -version
+docker version
+```
+
+Crie o PostgreSQL 16. Digite uma senha nova quando solicitado; ela não aparece na tela. Os valores definidos neste terminal são usados pelo Docker e pela aplicação:
+
+```powershell
+$senhaSegura = Read-Host 'Crie uma senha para o PostgreSQL local' -AsSecureString
+$ponteiro = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($senhaSegura)
+try { $env:DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ponteiro) }
+finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ponteiro) }
+$env:POSTGRES_PASSWORD = $env:DB_PASSWORD
 $env:DB_USERNAME = 'postgres'
+$env:DB_URL = 'jdbc:postgresql://127.0.0.1:55432/organizacao_recursos'
+docker run -d --name organizacao-postgres -p 127.0.0.1:55432:5432 -e POSTGRES_USER=postgres -e POSTGRES_DB=organizacao_recursos -e POSTGRES_PASSWORD postgres:16
+```
+
+Aguarde o banco ficar pronto; repita o comando de prontidão até retornar sucesso:
+
+```powershell
+docker exec organizacao-postgres pg_isready -U postgres -d organizacao_recursos
 .\mvnw.cmd -B -DskipTests package
 java -jar .\target\organizacao-recursos-0.0.1-SNAPSHOT.jar --bootstrap-admin
 ```
 
-O comando solicita interativamente o nome, e-mail, senha do ADMIN e senha do PostgreSQL. As senhas são digitadas sem eco; a senha do administrador precisa ter ao menos 12 caracteres. Não passe senhas como argumentos nem as grave em arquivos versionados. O comando verifica que o banco não contém objetos de aplicação antes de iniciar o Spring/Flyway. As migrations são aplicadas automaticamente somente após essa verificação; a transação e um lock advisory PostgreSQL impedem duas inicializações simultâneas e qualquer banco que já tenha usuário é preservado sem alterações pelo serviço.
+No bootstrap interativo, informe nome, e-mail e uma senha nova para o ADMIN, confirme essa senha e informe a senha do PostgreSQL criada acima. A senha do ADMIN deve ter pelo menos 12 caracteres. Aguarde a mensagem de criação antes de iniciar o servidor normal.
 
-Após a mensagem de sucesso, configure as credenciais normais da aplicação. Gere um segredo JWT local aleatório em Base64 e informe a senha do banco como variável de ambiente:
+Gere um segredo JWT aleatório em Base64 e inicie a aplicação:
 
 ```powershell
 $bytes = New-Object byte[] 32
 $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-try {
-    $rng.GetBytes($bytes)
-}
-finally {
-    $rng.Dispose()
-}
+try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
 $env:JWT_SECRET = [Convert]::ToBase64String($bytes)
 [Array]::Clear($bytes, 0, $bytes.Length)
 $env:JWT_EXPIRATION = 'PT2H'
-$secureDbPassword = Read-Host 'Senha do PostgreSQL' -AsSecureString
-$dbPasswordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureDbPassword)
-try {
-    $env:DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($dbPasswordPointer)
-}
-finally {
-    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($dbPasswordPointer)
-}
 .\mvnw.cmd spring-boot:run
 ```
 
-Abra `http://localhost:8080/` e entre com o e-mail e a senha escolhidos no bootstrap. O segredo JWT precisa ser fornecido novamente sempre que iniciar o backend; não o compartilhe nem o versione.
+## Instalação no Linux e GitHub Codespaces
 
-Erros comuns: confirme que `DB_URL` aponta para `localhost` ou `127.0.0.1`, contém porta e nome do banco, e não inclui credenciais; confirme `DB_USERNAME` e a senha do PostgreSQL. Se o comando disser que o banco não está vazio ou que já existe usuário, interrompa e selecione/crie um banco local novo — não apague tabelas ou usuários para repetir o processo. Se as senhas digitadas não coincidirem, execute novamente apenas se o banco continuar vazio. A execução requer terminal interativo para impedir que a senha seja exibida.
+Em Bash, clone e confira as ferramentas:
 
-## Fluxos e endpoints principais
+```bash
+git clone https://github.com/MickaelZs/Organiza-o-de-Recursos.git
+cd Organiza-o-de-Recursos
+# Para avaliar a branch de trabalho, quando necessário:
+git switch feature/qa-entrega-final
+java -version
+docker version
+```
 
-- Autenticação: `POST /api/auth/login`;
-- Recursos: `/api/salas`, `/api/professores` e `/api/materiais`;
-- Reservas: `/api/reservas`, aprovação/rejeição, retirada/devolução e registro operacional de não comparecimento (`POST /api/reservas/{id}/nao-compareceu`);
-- Manutenção: `/api/manutencoes`;
-- Auditoria: `GET /api/auditorias`;
-- Notificações: `GET /api/notificacoes` e `PATCH /api/notificacoes/{id}/lida`;
-- Relatórios: `GET /api/relatorios/utilizacao`, `/carga-horaria` e `/conflitos-evitados`.
+Se houver mais de um JDK, selecione o JDK 21 disponível no ambiente, por exemplo `export JAVA_HOME=/caminho/para/jdk-21` e `export PATH="$JAVA_HOME/bin:$PATH"`; confirme novamente `java -version`. No Codespaces, use o terminal do workspace e confirme que o Docker está disponível.
 
-O catálogo completo de endpoints, perfis, payloads e transições está em [docs/api-fluxos.md](docs/api-fluxos.md).
+Crie uma senha local sem eco e inicie um PostgreSQL 16 isolado:
 
-Os relatórios exigem `inicio` e `termino` em ISO-8601 com offset e usam o intervalo semiaberto `[inicio, termino)`. RESPONSAVEL e ADMIN podem consultá-los. Utilização detalha cada recurso e carga horária detalha professores alocados, sem incluir estados não efetivados. A especificação detalhada está em [docs/api-relatorios.md](docs/api-relatorios.md).
+```bash
+read -r -s -p 'Crie uma senha para o PostgreSQL local: ' DB_PASSWORD; printf '\n'
+export DB_PASSWORD POSTGRES_PASSWORD="$DB_PASSWORD" DB_USERNAME=postgres
+export DB_URL='jdbc:postgresql://127.0.0.1:55432/organizacao_recursos'
+docker run -d --name organizacao-postgres -p 127.0.0.1:55432:5432 -e POSTGRES_USER=postgres -e POSTGRES_DB=organizacao_recursos -e POSTGRES_PASSWORD postgres:16
+```
 
-## Perfis e segurança
+Aguarde o banco ficar pronto; repita a verificação até retornar sucesso. Em seguida, compile e execute o bootstrap **antes** da inicialização normal:
 
-- `SOLICITANTE`: cria/altera/cancela as próprias reservas e consulta as próprias notificações;
-- `RESPONSAVEL`: aprova/rejeita reservas restritas, opera manutenção, registra retirada/devolução, consulta auditoria e relatórios;
-- `ADMIN`: operações administrativas, retirada/devolução, auditoria e relatórios.
+```bash
+docker exec organizacao-postgres pg_isready -U postgres -d organizacao_recursos
+./mvnw -B -DskipTests package
+java -jar ./target/organizacao-recursos-0.0.1-SNAPSHOT.jar --bootstrap-admin
+```
 
-Senhas são armazenadas com BCrypt e não são serializadas. A API é stateless com JWT. Rotas não autenticadas são somente health e login.
+Informe interativamente nome, e-mail e senha nova do ADMIN, confirme a senha e informe a senha do PostgreSQL. A senha do ADMIN deve ter pelo menos 12 caracteres. Após a mensagem de sucesso, gere o segredo JWT e inicie o servidor:
 
-## Tratamento de erros
+```bash
+export JWT_SECRET="$(openssl rand -base64 32)"
+export JWT_EXPIRATION='PT2H'
+./mvnw spring-boot:run
+```
 
-Respostas de erro da API seguem `timestamp`, `status`, `error`, `message` e `path`. Os códigos principais são 400 para entrada inválida, 401 para ausência de autenticação, 403 para falta de permissão, 404 para recurso inexistente e 409 para conflito/regra de estado. Falhas inesperadas retornam 500 sem stack trace. Detalhes estão em [docs/api-erros.md](docs/api-erros.md).
+No Codespaces, abra a aba **Ports** e acesse a porta encaminhada `8080` mantendo sua visibilidade **Private**. Não torne a porta do PostgreSQL pública. Para configurar um banco já existente, consulte o [guia de instalação](docs/guia-instalacao.md).
 
-## Migrations
+## Primeiro acesso e execução
 
-Flyway aplica, em ordem, V1 a V10. V8 cria os campos de retirada/devolução, V9 cria auditorias e V10 cria notificações. RF12, RF13 e RF14 não exigem nova tabela nem V11.
+O bootstrap aceita somente URL JDBC PostgreSQL local explícita, com porta e nome do banco, sem credenciais ou parâmetros na URL. Ele verifica se o banco está vazio antes de aplicar as migrations e criar o primeiro ADMIN. Se houver tabelas ou usuários, pare e use um banco novo; não remova dados para forçar o processo. Não há credenciais padrão de aplicação.
+
+Com o servidor em execução, abra `http://localhost:8080/` ou a URL privada encaminhada pelo Codespaces. Entre com o e-mail e a senha escolhidos no bootstrap. Em outro terminal, verifique:
+
+```bash
+curl http://localhost:8080/api/health
+```
+
+No PowerShell, também é possível usar `Invoke-RestMethod http://localhost:8080/api/health`. A aplicação aplica as migrations Flyway e valida o esquema na inicialização. Para encerrá-la, pressione `Ctrl+C` no terminal do servidor. Para parar o container criado pelos exemplos, use `docker stop organizacao-postgres`; para retomá-lo, `docker start organizacao-postgres`. Isso preserva o container e seus dados. Ao abrir um novo terminal, forneça novamente `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` e `JWT_SECRET` antes de iniciar a aplicação. Mantenha segredos fora do Git e de registros compartilhados.
+
+## API
+
+- Interface OpenAPI: `http://localhost:8080/swagger-ui.html`.
+- Documento OpenAPI: `http://localhost:8080/api-docs`.
+- `GET /api/health` e `POST /api/auth/login` são públicos; a interface e a documentação também são acessíveis sem autenticação. As rotas de negócio exigem `Authorization: Bearer <token>` após o login. Não compartilhe nem versione o token.
+
+| Endpoint | Uso principal |
+|---|---|
+| `/api/salas`, `/api/professores`, `/api/materiais` | Cadastro, consulta e filtros de recursos. |
+| `/api/reservas` | Criar e consultar reservas; `PUT` e `DELETE` em `/{id}` alteram e cancelam. |
+| `/api/reservas/{id}/aprovar`, `/rejeitar`, `/retirada`, `/devolucao`, `/nao-compareceu` | Decisões e transições operacionais. |
+| `/api/manutencoes` | Criar, consultar e cancelar manutenções. |
+| `/api/auditorias`, `/api/notificacoes` | Consultar histórico e notificações; `PATCH /api/notificacoes/{id}/lida` marca leitura. |
+| `/api/relatorios/utilizacao`, `/carga-horaria`, `/conflitos-evitados` | Relatórios para o período informado. |
+
+Respostas incluem `200`/`201` para operações bem-sucedidas, `204` para cancelamentos sem corpo, `400` para dados inválidos, `401` para autenticação ausente ou inválida, `403` para acesso negado, `404` para registro inexistente e `409` para conflito ou estado inválido. Veja os [fluxos e payloads](docs/api-fluxos.md), [filtros](docs/api-recursos.md), [relatórios](docs/api-relatorios.md) e [contrato de erros](docs/api-erros.md).
 
 ## Testes e qualidade
 
+Com Java 21 e Docker ativos, execute a suíte completa e depois valide a rastreabilidade, pois o validador usa os relatórios da execução:
+
 ```bash
-./mvnw -B test
 ./mvnw -B clean verify
 java scripts/ValidateRtm.java
 ```
 
-No Windows PowerShell, use:
+No PowerShell:
 
 ```powershell
-.\mvnw.cmd -B test
 .\mvnw.cmd -B clean verify
-java scripts\ValidateRtm.java
+java scripts/ValidateRtm.java
 ```
 
-Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2. O verificador da RTM roda após a suíte para validar links, IDs, fontes, testes, evidências e relatórios Surefire das linhas marcadas `PASS`.
+Os relatórios Surefire ficam em `target/surefire-reports/` e o JaCoCo em `target/site/jacoco/index.html` e `target/site/jacoco/jacoco.xml`. Os testes de integração usam PostgreSQL via Testcontainers. O `verify` exige cobertura mínima de **80% de linhas** e **70% de branches**.
 
-Última validação do commit 3426e518d9993c5db54de088d30773fb60ac1f40 (12/11/2026): clone temporário limpo, Java 21.0.11, Docker Engine 29.9.2 e PostgreSQL 16.15 via Testcontainers; clean verify passou com 214 testes, 0 falhas, 0 erros e 0 ignorados. JaCoCo local: 90,01% LINE e 72,07% BRANCH. O artifact da CI para o mesmo commit reportou 89,84% LINE e 72,07% BRANCH; ambos passam 80/70. GitHub Actions e SonarCloud também passaram no PR #9. Veja o [relatório de testes](docs/testes/relatorio-testes.md) e o [índice de evidências](docs/evidencias/README.md).
+Na validação local de 12/11/2026 do commit `2494ede` da branch de trabalho, foram registrados **215 testes, zero falhas, zero erros e zero ignorados**, com JaCoCo de **89,84% de linhas** e **72,07% de branches**. A RTM estrutural passou; o build e o Quality Gate do SonarCloud também foram aprovados para aquele commit no [PR #10](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/10). Esses números identificam aquela execução; alterações posteriores devem ser verificadas novamente. Consulte o [índice de evidências](docs/evidencias/README.md) e os checks do commit avaliado.
 
-Os resultados históricos de etapas anteriores permanecem preservados no [relatório de testes](docs/testes/relatorio-testes.md): registro `d0100a1` (`main`, 08/11/2026) com 192 testes e registro `f58a68e` (09/11/2026) com 204 testes. Eles não devem ser confundidos com os 214 testes da árvore de trabalho auditada em 12/11/2026.
+## Testes de carga com JMeter
 
-## Estrutura
+O [plano de execução](docs/performance/plano-jmeter.md) descreve os pré-requisitos e comandos não gráficos para JMeter 5.6.3. Os planos são [consulta](docs/performance/organizacao-recursos-consulta.jmx), [carga e concorrência](docs/performance/organizacao-recursos-carga.jmx) e [concorrência de material](docs/performance/organizacao-recursos-material.jmx). Use apenas PostgreSQL descartável e dados sintéticos: os cenários gravam reservas e manutenções. Forneça os tokens de teste por variáveis de ambiente, conforme o plano, sem colocá-los em argumentos, logs ou evidências.
 
-O código fica em `src/main/java/br/com/senac/organizacaorecursos`, organizado em `config`, `controller`, `dto`, `entity`, `exception`, `repository`, `security` e `service`. Requisitos, decisões e rastreabilidade ficam em `docs/`.
+O [resultado da auditoria](docs/performance/resultado-01.md) apresenta ambiente, amostras, métricas e limites; as [amostras sanitizadas](docs/evidencias/jmeter-2026-11-12/) preservam os resultados observados. Respostas `409` previstas de conflito são distintas de erros técnicos. Os testes não estabelecem capacidade de produção.
 
-Interface: o sistema disponibiliza uma interface web estática em `/` com acesso por JWT e painéis condicionados ao perfil. A inspeção visual manual em resoluções/dispositivos permanece pendente; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos. O redirect documentado pelo Springdoc é `/swagger-ui.html` → `/swagger-ui/index.html`.
+## Documentação
 
-## Qualidade e evidências
+- [Requisitos e rastreabilidade (RTM)](docs/rtm.md), [diagramas](docs/diagramas/arquitetura.md) e [ATAM](docs/atam.md).
+- [Plano de testes](docs/testes/plano-testes.md), [relatório de testes](docs/testes/relatorio-testes.md) e [evidência dos fluxos de interface](docs/evidencias/interface-fluxos-2026-11-12.md).
+- [Registro de defeitos](docs/defeitos/registro-defeitos.md), [relatório de qualidade](docs/relatorio-qualidade.md) e [relatório final](docs/entrega/relatorio-final-qualidade.md).
+- [Checklist de entrega](docs/entrega/checklist.md), [índice de evidências](docs/evidencias/README.md), [decisão de qualidade](docs/decisao-qualidade.md) e [CHANGELOG](CHANGELOG.md).
+- [Guia de prova oral e demonstração](docs/prova-oral/guia.md) e [guia de instalação](docs/guia-instalacao.md).
 
-- [Matriz de rastreabilidade](docs/rtm.md) e [status dos requisitos](docs/status-requisitos.md);
-- [Plano e relatório de testes](docs/testes/plano-testes.md) e [relatório final de testes](docs/testes/relatorio-testes.md);
-- [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/README.md);
-- [Plano JMeter](docs/performance/plano-jmeter.md) e [resultado de performance](docs/performance/resultado-jmeter.md);
-- [Resultado JMeter da auditoria](docs/performance/resultado-01.md);
-- [Checklist da entrega](docs/entrega/checklist.md), [changelog](CHANGELOG.md) e [decisão de qualidade](docs/decisao-qualidade.md);
-- [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/relatorio-qualidade.md).
+## Solução de problemas
+
+| Sintoma | Verificação |
+|---|---|
+| Java diferente de 21 | Confira `java -version`, `JAVA_HOME` e `PATH`; execute o Wrapper novamente com o JDK 21 ativo. |
+| Docker ou Testcontainers indisponível | Inicie o daemon e confira `docker version`; o usuário precisa ter acesso ao Docker. |
+| PostgreSQL não conecta | Verifique `docker ps`, `pg_isready`, a porta publicada, `DB_URL`, usuário e senha. Não recrie um banco existente para diagnosticar. |
+| `JWT_SECRET` ausente ou inválido | Gere novamente um segredo forte em Base64, exporte-o no terminal do servidor e reinicie a aplicação. Tokens antigos deixarão de ser válidos se o segredo mudar. |
+| Bootstrap recusado | Use terminal interativo e um banco local novo e vazio; confira URL, usuário e senha. O bootstrap não deve ser repetido sobre um banco já inicializado. |
+| Porta 8080 ocupada | Encerre somente o processo que você iniciou ou configure outra porta, por exemplo com `--server.port=8081` ao iniciar a aplicação. |
+| Mockito/Byte Buddy falha no sandbox | Confira a causa no relatório Surefire. Restrições de attach da JVM ou acesso ao Docker podem impedir testes no sandbox; execute no terminal autorizado do ambiente, sem desabilitar testes. |
+| HTTP 401 ou 403 | Verifique login, validade do token e perfil exigido pela operação na [matriz de autorização](docs/seguranca/matriz-autorizacao.md). |
+
+## Equipe, contribuição e entrega
+
+Os nomes completos e as contribuições individuais devem ser confirmados pelos integrantes; não são presumidos aqui. O histórico Git registra as alterações. Para contribuir, trabalhe em uma branch, faça commits descritivos, abra um pull request para revisão e aguarde a CI e os checks de qualidade. Consulte o [PR #10](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/10) e o [workflow](.github/workflows/ci.yml); a análise SonarCloud no workflow depende das credenciais e variáveis configuradas no repositório.
+
+A tag `v1.0.0-rc1` só deve ser criada após revisão e aprovação da equipe, integração autorizada em `main`, CI e Quality Gate aprovados no commit exato da `main` e conferência do checklist e das evidências. A [decisão de qualidade](docs/decisao-qualidade.md) permanece disponível para revisão e assinaturas reais; não pressupõe aprovação nem publicação do release.

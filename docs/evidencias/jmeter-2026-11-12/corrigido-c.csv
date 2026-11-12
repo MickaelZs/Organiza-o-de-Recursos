@@ -1,0 +1,6 @@
+inicio_relativo_ms,duracao_ms,cenario,http,sucesso,latencia_ms
+0,80,Criar manutenção sintética,201,true,75
+159,71,POST reserva sobreposição de professor,201,true,71
+161,91,POST reserva sobreposição de professor,409,true,91
+157,106,POST reserva sobreposição de professor,409,true,106
+156,87,POST reserva sobreposição de professor,409,true,87

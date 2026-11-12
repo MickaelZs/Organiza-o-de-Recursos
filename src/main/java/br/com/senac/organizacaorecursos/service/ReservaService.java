@@ -52,7 +52,7 @@ public class ReservaService {
         this.notificacaoService = notificacaoService;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ReservaConflitoException.class)
     public Reserva criar(String emailAutenticado, ReservaRequest request) {
         Usuario solicitante = usuarioAtivo(emailAutenticado);
         if (solicitante.getPerfil() != Perfil.SOLICITANTE) {
@@ -84,7 +84,7 @@ public class ReservaService {
         return reserva;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ReservaConflitoException.class)
     public Reserva atualizar(Long id, String emailAutenticado, ReservaRequest request) {
         Usuario usuario = usuarioSolicitante(emailAutenticado);
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
@@ -104,7 +104,7 @@ public class ReservaService {
         return salva;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ReservaConflitoException.class)
     public Reserva aprovar(Long id, String emailAutenticado) {
         usuarioResponsavel(emailAutenticado);
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);

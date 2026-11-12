@@ -1,0 +1,16 @@
+inicio_relativo_ms,duracao_ms,cenario,http,sucesso,latencia_ms
+0,311,Criar manutenção sintética,201,true,296
+571,487,POST reserva mesmo recurso,409,true,487
+552,392,POST reserva mesmo recurso,409,true,392
+567,118,POST reserva em manutenção,409,true,118
+563,437,POST reserva mesmo recurso,409,true,427
+553,335,POST reserva mesmo recurso,409,true,335
+538,200,POST reserva mesmo recurso,201,true,200
+540,301,POST reserva mesmo recurso,409,true,281
+577,251,POST reserva em manutenção,409,true,242
+541,216,POST reserva mesmo recurso,409,true,216
+569,547,POST reserva mesmo recurso,409,true,547
+574,607,POST reserva mesmo recurso,409,true,607
+582,644,POST reserva mesmo recurso,409,true,644
+553,205,POST reserva em manutenção,409,true,205
+584,285,POST reserva em manutenção,409,true,285

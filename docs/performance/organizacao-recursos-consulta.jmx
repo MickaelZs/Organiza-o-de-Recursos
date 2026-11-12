@@ -14,7 +14,7 @@
           </elementProp>
           <elementProp name="authToken" elementType="Argument">
             <stringProp name="Argument.name">authToken</stringProp>
-            <stringProp name="Argument.value">${__env(JMETER_AUTH_TOKEN,)}</stringProp>
+            <stringProp name="Argument.value">${__groovy(System.getenv('JMETER_AUTH_TOKEN') ?: '')}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>

@@ -1,5 +1,32 @@
 # Índice do pacote de evidências
 
+## Validação dos fluxos obrigatórios
+
+[Fluxos Chromium](interface-fluxos-2026-11-12.md) e [JMeter B e D](../performance/resultado-01.md) registram a execução com dados sintéticos e seus limites. A edição de cadastros de recursos não está explicitada como requisito no escopo fornecido; alteração de reservas foi testada.
+
+
+## Complemento do clone e material
+
+No Chromium, ADMIN cadastrou uma sala, um professor e um material sintéticos e os três apareceram nas respectivas listas. SOLICITANTE filtrou as listas por localização, competência e tipo, respectivamente, e encontrou os três registros. Edição de recursos não foi testada: não há endpoint ou controle correspondente.
+
+Clone limpo `3d12b9d`: Java 21, 215 testes e RTM estrutural aprovados. Em banco novo `qa_clone_final_20261112`, bootstrap interativo do ADMIN terminou com sucesso; aplicação iniciada com Maven Wrapper em porta alternativa, health HTTP 200 e login/logout visual ADMIN aprovados. [Amostras JMeter sanitizadas](jmeter-2026-11-12/) incluem execução de material e os resultados anteriores; [relatório](../performance/resultado-01.md).
+
+
+## Correção de contenção — evidências locais
+
+215 testes aprovados com Java 21 e gates JaCoCo aprovados; RTM estrutural válida. A reprodução e os resultados JMeter estão em [resultado 01](../performance/resultado-01.md). Os arquivos temporários de execução não são artifacts duráveis. Os checks do commit final e o clone operacional ainda precisam ser verificados.
+
+
+## Auditoria adicional de 12/11/2026
+
+- [Regressão anterior e health check](etapa-6-2026-11-12.md). Clone limpo do commit 33bf864: 214 testes sem falhas, erros ou ignorados, gates JaCoCo e RTM estrutural aprovados. Bootstrap e login no clone não foram concluídos.
+- Chromium headless: login e logout dos três perfis sintéticos; navegação pelas abas; larguras 320, 375, 390, 768, 1024 e 1440 px. Após ajuste CSS servido localmente ao navegador, não houve transbordamento horizontal da página nas medições. Uma mensagem de erro interno apareceu para ADMIN durante carga concorrente; fluxos operacionais completos não foram validados.
+- [JMeter atual](../performance/resultado-01.md): quatro respostas 500 sob carga; investigação e repetição pendentes.
+- [RTM](../rtm.md), [defeitos](../defeitos/registro-defeitos.md), [relatório de qualidade](../entrega/relatorio-final-qualidade.md), [CI histórica](https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/43265545752) e [Sonar histórico](../entrega/sonarcloud.md). Os resultados históricos não comprovam o commit final.
+
+O conteúdo seguinte é histórico e mantém os SHAs de sua execução.
+
+
 ## Identificação do commit
 
 - Repositório: [MickaelZs/Organiza-o-de-Recursos](https://github.com/MickaelZs/Organiza-o-de-Recursos)

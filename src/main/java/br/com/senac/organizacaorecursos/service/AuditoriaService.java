@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Propagation;
 
 @Service
 public class AuditoriaService {
@@ -52,7 +51,7 @@ public class AuditoriaService {
                 estadoPosterior, serializarDetalhes(detalhes));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public Auditoria registrarConflitoEvitado(String emailAutenticado, String tipoRecurso, Long recursoId,
                                               Map<String, Object> detalhes) {
         Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
