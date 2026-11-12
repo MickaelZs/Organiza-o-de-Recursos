@@ -1,5 +1,15 @@
 # Índice do pacote de evidências
 
+## Auditoria adicional de 12/11/2026
+
+- [Regressão anterior e health check](etapa-6-2026-11-12.md). Clone limpo do commit 33bf864: 214 testes sem falhas, erros ou ignorados, gates JaCoCo e RTM estrutural aprovados. Bootstrap e login no clone não foram concluídos.
+- Chromium headless: login e logout dos três perfis sintéticos; navegação pelas abas; larguras 320, 375, 390, 768, 1024 e 1440 px. Após ajuste CSS servido localmente ao navegador, não houve transbordamento horizontal da página nas medições. Uma mensagem de erro interno apareceu para ADMIN durante carga concorrente; fluxos operacionais completos não foram validados.
+- [JMeter atual](../performance/resultado-01.md): quatro respostas 500 sob carga; investigação e repetição pendentes.
+- [RTM](../rtm.md), [defeitos](../defeitos/registro-defeitos.md), [relatório de qualidade](../entrega/relatorio-final-qualidade.md), [CI histórica](https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/43265545752) e [Sonar histórico](../entrega/sonarcloud.md). Os resultados históricos não comprovam o commit final.
+
+O conteúdo seguinte é histórico e mantém os SHAs de sua execução.
+
+
 ## Identificação do commit
 
 - Repositório: [MickaelZs/Organiza-o-de-Recursos](https://github.com/MickaelZs/Organiza-o-de-Recursos)

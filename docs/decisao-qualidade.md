@@ -1,5 +1,12 @@
 # Decisão de qualidade — rascunho para revisão do grupo
 
+## Decisão técnica atual — BLOQUEAR
+
+A carga JMeter de 12/11/2026 produziu quatro HTTP 500; veja [resultado 01](performance/resultado-01.md). Faltam investigação, correção e nova validação, inspeção funcional completa, CI/Sonar no commit final e revisão humana. Não há riscos aceitos nem responsáveis designados. Nomes, contribuições declaradas, aprovação e assinaturas dos integrantes permanecem a confirmar. Nenhuma tag foi autorizada. O histórico abaixo identifica um snapshot anterior.
+
+Texto para formulário (rascunho, não enviar): Repositório público https://github.com/MickaelZs/Organiza-o-de-Recursos; tag avaliada: **pendente de criação e autorização**; integrantes: **nomes a confirmar**.
+
+
 ## Identificação
 
 - Projeto: Organização de Recursos.

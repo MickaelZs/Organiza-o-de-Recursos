@@ -1,5 +1,12 @@
 # Changelog
 
+## Não lançado — auditoria 12/11/2026
+
+- Corrigida a leitura de tokens de ambiente nos planos JMeter 5.6.3.
+- Ajustado o cabeçalho em telas estreitas; validação visual completa pendente.
+- Registrada execução de carga com HTTP 500 e decisão técnica de bloquear a liberação.
+
+
 ## v1.0.0-rc1 — rascunho de escopo
 
 Estado: release candidate ainda não criado. Este conteúdo descreve o trabalho
