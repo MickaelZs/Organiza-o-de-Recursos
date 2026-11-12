@@ -1,5 +1,10 @@
 # Decisão de qualidade — rascunho para revisão do grupo
 
+## Atualização técnica — permanece BLOQUEAR
+
+A contenção do pool foi corrigida e o cenário combinado repetido não produziu 500, mas ainda faltam validações funcionais completas, cenários JMeter isolados, clone operacional e checks do commit final. Aprovações, responsáveis e assinaturas permanecem pendentes.
+
+
 ## Decisão técnica atual — BLOQUEAR
 
 A carga JMeter de 12/11/2026 produziu quatro HTTP 500; veja [resultado 01](performance/resultado-01.md). Faltam investigação, correção e nova validação, inspeção funcional completa, CI/Sonar no commit final e revisão humana. Não há riscos aceitos nem responsáveis designados. Nomes, contribuições declaradas, aprovação e assinaturas dos integrantes permanecem a confirmar. Nenhuma tag foi autorizada. O histórico abaixo identifica um snapshot anterior.

@@ -1,5 +1,10 @@
 # Checklist de entrega em clone limpo
 
+## Correção de contenção — atualização
+
+Teste PostgreSQL com 16 requisições passou e carga combinada repetida teve zero 500. Permanecem pendentes a execução isolada completa dos cenários JMeter, fluxos de navegador, bootstrap em clone limpo, CI/Sonar do commit final e revisão humana. [Resultado](../performance/resultado-01.md).
+
+
 ## Atualização da auditoria de 12/11/2026 — branch feature/qa-entrega-final
 
 | Entregável | Existe | Atualização e evidência | Caminho |

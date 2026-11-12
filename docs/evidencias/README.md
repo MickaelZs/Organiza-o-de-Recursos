@@ -1,5 +1,10 @@
 # Índice do pacote de evidências
 
+## Correção de contenção — evidências locais
+
+215 testes aprovados com Java 21 e gates JaCoCo aprovados; RTM estrutural válida. A reprodução e os resultados JMeter estão em [resultado 01](../performance/resultado-01.md). Os arquivos temporários de execução não são artifacts duráveis. Os checks do commit final e o clone operacional ainda precisam ser verificados.
+
+
 ## Auditoria adicional de 12/11/2026
 
 - [Regressão anterior e health check](etapa-6-2026-11-12.md). Clone limpo do commit 33bf864: 214 testes sem falhas, erros ou ignorados, gates JaCoCo e RTM estrutural aprovados. Bootstrap e login no clone não foram concluídos.

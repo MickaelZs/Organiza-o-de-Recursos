@@ -1,5 +1,10 @@
 # Relatório final de qualidade — auditoria da Etapa 6
 
+## Atualização de 12/11/2026
+
+A regressão da correção de concorrência passou com 215 testes sem falhas, erros ou ignorados; JaCoCo LINE 89,84% e BRANCH 72,07%; RTM estrutural aprovada. A carga corrigida não teve 500 nos cenários repetidos; ver [resultado JMeter](performance/resultado-01.md) para os limites e a execução inicialmente inválida por professor inexistente. Fluxos completos no navegador, clone operacional e checks remotos do commit final permanecem pendentes.
+
+
 ## A. Resumo executivo
 
 O núcleo funcional, a suíte automatizada, a cobertura, a CI e o SonarCloud

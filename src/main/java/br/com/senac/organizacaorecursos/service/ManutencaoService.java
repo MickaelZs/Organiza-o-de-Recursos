@@ -49,7 +49,7 @@ public class ManutencaoService {
         this.notificacaoService = notificacaoService;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = ManutencaoConflitoException.class)
     public Manutencao criar(String emailAutenticado, ManutencaoRequest request) {
         Usuario responsavel = usuarioAtivo(emailAutenticado);
         if (responsavel.getPerfil() == Perfil.SOLICITANTE) {

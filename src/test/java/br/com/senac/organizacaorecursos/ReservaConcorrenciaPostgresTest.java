@@ -102,6 +102,18 @@ class ReservaConcorrenciaPostgresTest {
     }
 
     @Test
+    void conflitosConcorrentesNaoEsgotamPoolERegistramAuditoria() throws Exception {
+        ReservaRequest[] pedidos = new ReservaRequest[16];
+        java.util.Arrays.fill(pedidos, pedidoSala(sala));
+        List<Resultado> resultados = executarConcorrentemente(pedidos);
+        assertThat(resultados.stream().filter(Resultado.CRIADA::equals)).hasSize(1);
+        assertThat(resultados.stream().filter(Resultado.CONFLITO::equals)).hasSize(15);
+        assertThat(reservaRepository.findAll()).hasSize(1);
+        assertThat(auditoriaRepository.findAll().stream()
+                .filter(auditoria -> "CONFLITO_EVITADO".equals(auditoria.getAcao()))).hasSize(15);
+    }
+
+    @Test
     void reservasConcorrentesDeRecursosDiferentesPodemSerConfirmadas() throws Exception {
         List<Resultado> resultados = executarConcorrentemente(
                 pedidoSala(sala), pedidoSala(outraSala));

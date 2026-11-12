@@ -1,5 +1,11 @@
 # Changelog
 
+## Não lançado — correção da contenção de auditoria
+
+- A auditoria de conflito usa a mesma transação antes de mudanças de domínio, evitando esgotamento do pool por transações aninhadas; teste concorrente PostgreSQL adicionado.
+- A regressão e os resultados de carga foram registrados com suas limitações.
+
+
 ## Não lançado — auditoria 12/11/2026
 
 - Corrigida a leitura de tokens de ambiente nos planos JMeter 5.6.3.

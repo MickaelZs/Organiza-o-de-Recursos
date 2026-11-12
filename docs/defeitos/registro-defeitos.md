@@ -1,5 +1,10 @@
 # Registro de defeitos
 
+## Atualização da contenção de pool — correção em validação
+
+A pilha da JVM demonstrou espera por conexão para auditoria `REQUIRES_NEW` com a transação principal retendo conexão e lock. Auditoria de conflito agora usa a transação da operação, cuja exceção de conflito esperado não causa rollback; a verificação ocorre antes das alterações de domínio. Teste PostgreSQL com 16 concorrentes passou com uma reserva e 15 auditorias; carga HTTP e JMeter repetidas não apresentaram 500. Validação funcional completa e cenários isolados pendentes.
+
+
 ## Cabeçalho e boas-vindas mobile — corrigido parcialmente
 
 Em Chromium autenticado, a página excedia 320–390 px de largura. O CSS ajusta os elementos do cabeçalho e quebra o texto de boas-vindas. Após a alteração servida diretamente ao navegador, a largura da página coincidiu com os viewports 320, 375, 390, 768, 1024 e 1440 px nos três perfis. A validação visual e funcional completa permanece pendente.
