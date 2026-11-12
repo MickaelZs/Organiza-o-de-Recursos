@@ -47,6 +47,12 @@ Linux/macOS:
 Health check: `GET /api/health`. A especificação OpenAPI fica disponível em `/swagger-ui.html`.
 Interface web responsiva: `/`.
 
+## Qualidade e arquitetura
+
+Consulte a [RTM](docs/rtm.md), a [análise ATAM preliminar](docs/atam.md) e o
+[relatório de qualidade](docs/relatorio-qualidade.md) para rastreabilidade,
+cenários e evidências da auditoria.
+
 ### Primeiro acesso ao sistema
 
 Este procedimento cria o primeiro ADMIN apenas em um banco PostgreSQL local novo. O comando recusa URLs remotas, URLs com credenciais/parametrização e bancos que já tenham objetos de aplicação; não remova dados para contornar essa proteção.
@@ -140,9 +146,7 @@ java scripts\ValidateRtm.java
 
 Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2. O verificador da RTM roda após a suíte para validar links, IDs, fontes, testes, evidências e relatórios Surefire das linhas marcadas `PASS`.
 
-Última execução local desta auditoria (12/11/2026): `.\mvnw.cmd -B verify` terminou com `BUILD SUCCESS`, usando Java 21, Docker Desktop/Testcontainers e PostgreSQL 16.15. Foram 214 testes, 0 falhas, 0 erros e 0 ignorados. JaCoCo: 89,22% LINE (1.092/1.224) e 72,07% BRANCH (320/444); o `jacoco-check` passou. Uma tentativa anterior sem acesso ao named pipe do Docker ficou registrada como diagnóstico, sem uso de `-DskipTests`. Consulte o [relatório de testes](docs/testes/relatorio-testes.md). CI/SonarCloud para a árvore local desta auditoria não foram comprovados.
-
-O número 93 registrado no relatório refere-se somente à tentativa diagnóstica parcial bloqueada pelo Docker; ele não representa a suíte final e não deve ser somado aos 214 testes aprovados.
+Última validação do commit 3426e518d9993c5db54de088d30773fb60ac1f40 (12/11/2026): clone temporário limpo, Java 21.0.11, Docker Engine 29.9.2 e PostgreSQL 16.15 via Testcontainers; clean verify passou com 214 testes, 0 falhas, 0 erros e 0 ignorados. JaCoCo local: 90,01% LINE e 72,07% BRANCH. O artifact da CI para o mesmo commit reportou 89,84% LINE e 72,07% BRANCH; ambos passam 80/70. GitHub Actions e SonarCloud também passaram no PR #9. Veja o [relatório de testes](docs/testes/relatorio-testes.md) e o [índice de evidências](docs/evidencias/README.md).
 
 Os resultados históricos de etapas anteriores permanecem preservados no [relatório de testes](docs/testes/relatorio-testes.md): registro `d0100a1` (`main`, 08/11/2026) com 192 testes e registro `f58a68e` (09/11/2026) com 204 testes. Eles não devem ser confundidos com os 214 testes da árvore de trabalho auditada em 12/11/2026.
 
@@ -158,4 +162,6 @@ Interface: o sistema disponibiliza uma interface web estática em `/` com acesso
 - [Plano e relatório de testes](docs/testes/plano-testes.md) e [relatório final de testes](docs/testes/relatorio-testes.md);
 - [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/README.md);
 - [Plano JMeter](docs/performance/plano-jmeter.md) e [resultado de performance](docs/performance/resultado-jmeter.md);
-- [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/entrega/relatorio-final-qualidade.md).
+- [Resultado JMeter da auditoria](docs/performance/resultado-01.md);
+- [Checklist da entrega](docs/entrega/checklist.md), [changelog](CHANGELOG.md) e [decisão de qualidade](docs/decisao-qualidade.md);
+- [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/relatorio-qualidade.md).

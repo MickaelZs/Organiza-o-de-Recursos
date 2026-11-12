@@ -25,18 +25,18 @@ Clone o repositório fornecido pela equipe e entre na pasta do projeto. Não inc
 PowerShell:
 
 ```powershell
-git clone <URL_DO_REPOSITORIO>
-Set-Location '.\Organização de Recursos'
+git clone https://github.com/MickaelZs/Organiza-o-de-Recursos.git
+Set-Location '.\Organiza-o-de-Recursos'
 ```
 
 Linux/macOS:
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
-cd 'Organização de Recursos'
+git clone https://github.com/MickaelZs/Organiza-o-de-Recursos.git
+cd 'Organiza-o-de-Recursos'
 ```
 
-Substitua `<URL_DO_REPOSITORIO>` pela URL real disponibilizada pela equipe; ela não é inferida por este documento.
+O comando clona o repositório público do projeto e cria uma pasta com o nome da organização do GitHub.
 
 ## 3. Criar um banco local vazio
 

@@ -1,5 +1,11 @@
 # Resultado JMeter
 
+> Registro histórico de execuções locais datadas de 08/11/2026 e 10/11/2026.
+> Nesta auditoria os JTL/HTML referidos não foram encontrados no workspace ou
+> no artifact CI, e JMeter não estava instalado. As métricas abaixo não foram
+> recalculadas nem atribuídas ao commit 3426e51. O estado atual está em
+> [resultado-01.md](resultado-01.md).
+
 Este documento separa a execução de consulta, que tem métricas agregadas
 versionadas, das execuções exploratórias dos cenários A–F, cujos JTLs foram
 gerados localmente em `target/` e não acompanham o Git.

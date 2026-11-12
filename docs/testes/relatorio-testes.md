@@ -1,72 +1,74 @@
 # Relatório de testes
 
-## Execução local desta auditoria
+## Execução do commit avaliado
 
-Data: 12/11/2026. Java 21 confirmado. Docker Desktop 4.97.0/Engine 29.9.2 acessível ao processo Maven; os testes de integração executaram com PostgreSQL 16.15 real via Testcontainers.
+- Data: 12/11/2026.
+- Branch: feature/qa-finalizacao-etapas-1-2.
+- Commit: 3426e518d9993c5db54de088d30773fb60ac1f40.
+- Clone: shallow, novo e temporário, obtido do GitHub; HEAD conferido antes do build.
+- Comando: .\mvnw.cmd -B clean verify.
+- Ambiente: Java 21.0.11, Docker Engine 29.9.2, PostgreSQL 16.15 por Testcontainers.
+- Resultado local em clone limpo: BUILD SUCCESS; 214 testes, 0 falhas, 0 erros e 0 ignorados.
+- Resultado remoto: GitHub Actions run 43265545752, build SUCCESS; artifact test-reports disponível.
 
-Escopo Git: branch `feature/qa-finalizacao-etapas-1-2`, HEAD `f58a68e` (`feat: finalize admin bootstrap and quality gates`, 09/11/2026) e árvore de trabalho com alterações não commitadas. Referências a `d0100a1`, `7948ce7` e `6a758d2` abaixo são históricas e estão identificadas por finalidade; não são o commit da execução atual.
+| Medida | Clone limpo local | Artifact CI |
+|---|---:|---:|
+| Testes executados | 214 | 214 |
+| Falhas | 0 | 0 |
+| Erros | 0 | 0 |
+| Ignorados | 0 | 0 |
+| JaCoCo LINE | 90,01% (1.072/1.191) | 89,84% (1.070/1.191) |
+| JaCoCo BRANCH | 72,07% (320/444) | 72,07% (320/444) |
+| Gates JaCoCo 80/70 | PASS | PASS |
 
-| Medida | Resultado |
-|---|---:|
-| Testes executados | 214 |
-| Aprovados | 214 |
-| Falhas | 0 |
-| Erros | 0 |
-| Ignorados | 0 |
-| JaCoCo LINE | 89,22% (1.092/1.224) |
-| JaCoCo BRANCH | 72,07% (320/444) |
-| `jacoco-check` (limites 80/70) | PASS |
+Os percentuais locais e remotos diferem em duas linhas cobertas; ambos os
+relatórios vêm de clean verify e passam o mesmo limite. A causa dessa variação
+não foi determinada; os números são mantidos separados por origem.
 
-O comando solicitado `.\mvnw.cmd -B verify` terminou com `BUILD SUCCESS`. O Flyway validou e aplicou as 10 migrations em cada banco de teste; o relatório JaCoCo foi gerado e o `jacoco-check` informou `All coverage checks have been met.`
+O clone executou também java scripts\ValidateRtm.java: 24 IDs e 174 links
+locais verificados, com RTM structural validation passed. O Flyway aplicou as
+10 migrations nos bancos descartáveis iniciados pelos testes.
 
-## Evidência histórica preservada
+## Tipos e limites da suíte
 
-Em 10/11/2026 houve uma execução com os mesmos 214 testes e cobertura, mas o `spring-boot:repackage` falhou ao renomear o JAR no Windows. Essa ocorrência permanece registrada no histórico; não é o resultado final desta retomada.
+- JUnit 5/Jupiter, unitários, parametrizados, integração e API via MockMvc.
+- Testcontainers com PostgreSQL 16; não há substituição por H2.
+- Testes de autorização, transições, auditoria, relatórios, notificações,
+  bootstrap e concorrência executaram na suíte.
+- Os testes concorrentes usam CountDownLatch/ExecutorService e verificam o
+  estado persistido no PostgreSQL; são distintos de medições de carga.
+- A aplicação não possui automação de navegador E2E. MockMvc cobre fluxos de
+  API através do Spring e da persistência, mas não substitui inspeção visual.
+- WireMock não se aplica ao código atual porque não há cliente HTTP externo;
+  notificações são persistidas internamente.
+- A sequência RED/GREEN de manutenção está documentada por 7948ce7 (teste) e
+  6a758d2 (implementação), como evidência histórica.
+- Nenhum teste foi ignorado ou excluído; não se usou -DskipTests.
 
-### Marcos históricos de execução e versão
+## Evidência de integração contínua
 
-Os registros abaixo são preservados para não misturar resultados de etapas diferentes. As datas indicadas são as datas dos commits/registros versionados; o relatório original não informa uma data de execução separada.
+- [Execução do GitHub Actions](https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/43265545752)
+- [PR #9](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/9)
+- O artifact test-reports contém Surefire e JaCoCo do commit
+  3426e518d9993c5db54de088d30773fb60ac1f40.
+- SonarCloud e Quality Gate estão detalhados em
+  [docs/entrega/sonarcloud.md](../entrega/sonarcloud.md).
 
-| Etapa/registro | Versão Git do registro | Data do registro | Comando/ambiente documentado | Testes | JaCoCo LINE | JaCoCo BRANCH | Situação |
-|---|---|---|---|---:|---:|---:|---|
-| Resultado anterior | `d0100a1` — `main`, merge da entrega | 08/11/2026 | `clean verify`, Java 21 e Docker Desktop | 192, 0 falhas, 0 erros, 0 ignorados | 93,03% (4.616/4.962) | 76,44% (266/348) | Histórico preservado; não representa a árvore atual |
-| Etapa 2 | `f58a68e` — `feat: finalize admin bootstrap and quality gates` | 09/11/2026 | `verify`, Java 21 e Docker Desktop | 204, 0 falhas, 0 erros, 0 ignorados | 87,78% (948/1.080) | 70,09% (300/428) | Histórico preservado; substituído pelo resultado atual da auditoria |
+## Histórico separado
 
-## Tipos de teste e limites
+| Commit | Testes | LINE | BRANCH | Uso |
+|---|---:|---:|---:|---|
+| d0100a1 (main, 08/11/2026) | 192 | 93,03% | 76,44% | Histórico |
+| f58a68e (09/11/2026) | 204 | 87,78% | 70,09% | Histórico |
+| 3426e51 (12/11/2026) | 214 | 90,01% local / 89,84% CI | 72,07% | Commit avaliado |
 
-- JUnit 5/Jupiter, testes unitários, parametrizados, de integração e API em caixa-preta.
-- Testcontainers com `postgres:16-alpine` para persistência, migrations, autorização, auditoria, notificações, relatórios e concorrência.
-- Testes concorrentes usam `CountDownLatch`/`ExecutorService`; não substituem o teste JMeter de carga.
-- Fluxos de API end-to-end semânticos atravessam Spring MVC, serviços, JPA, Flyway e PostgreSQL. Não foi identificada automação de navegador E2E.
-- WireMock não é aplicável ao comportamento atual: não há chamada HTTP externa a provedor; as notificações são simuladas e persistidas internamente.
-- TDD RED/GREEN de manutenção está referenciado por `7948ce7` (testes RED, 04/11/2026) e `6a758d2` (implementação, 04/11/2026); não se infere TDD para toda a suíte.
-- Nenhum teste foi desabilitado para obter o resultado acima; não foram usados `-DskipTests`, exclusões de classes ou redução de gates.
+Histórico de tentativa diagnóstica com Docker indisponível não é somado nem
+usado como resultado funcional.
 
-## Tentativa diagnóstica sem acesso ao Docker
+## Evidências não automatizadas
 
-Data: 12/11/2026. A primeira tentativa sem elevação do processo Maven recebeu `AccessDeniedException` ao acessar `\\.\pipe\docker_engine`.
-
-| Medida | Resultado |
-|---|---:|
-| Testes executados | 93 |
-| Falhas | 0 |
-| Erros | 14 |
-| Ignorados | 9 |
-| Causa | sandbox sem acesso ao named pipe do Docker |
-
-Essa tentativa foi mantida como diagnóstico do ambiente. A execução escalada
-posterior, registrada na seção principal, conectou-se ao Docker e concluiu a
-suíte sem falhas, erros ou testes ignorados.
-
-**Regra de consolidação:** 93 é a contagem de uma tentativa parcial e não deve
-ser somada nem comparada como resultado funcional final. O resultado oficial
-desta auditoria é a suíte completa de 214 testes, com 0 falhas, 0 erros e 0
-ignorados.
-
-## Estado remoto
-
-O workflow está definido em `.github/workflows/ci.yml`. A execução remota consultada mais recente foi bem-sucedida em `main`, no commit `d0100a1` (08/11/2026), anterior ao HEAD `f58a68e` (09/11/2026) e às alterações locais desta auditoria. Não há evidência de CI/SonarCloud para a árvore de trabalho atual. O scanner SonarCloud é condicional às variáveis/secrets do repositório; a configuração do YAML não prova que o scanner ou o Quality Gate rodaram.
-
-## Comando de rastreabilidade
-
-Após `verify`, `java scripts/ValidateRtm.java` foi executado com JDK 21 e retornou `RTM structural validation passed`. O verificador não altera os resultados funcionais nem substitui revisão dos testes; ele valida links, IDs, referências, arquivos de evidência e resultados Surefire para linhas marcadas `PASS`.
+O clone limpo validou o build e os testes; não executou o servidor, o bootstrap
+interativo do primeiro administrador ou login pela interface. O relatório
+JMeter desta missão está em [resultado-01.md](../performance/resultado-01.md):
+os JTL/HTML de execuções antigas não estão disponíveis e não foi feita uma nova
+carga nesta auditoria.
