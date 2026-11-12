@@ -102,14 +102,29 @@ class RelatorioPostgresTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalReservas").value(2))
                 .andExpect(jsonPath("$.totalHorasUtilizadas").value(3.0))
-                .andExpect(jsonPath("$.porTipoRecurso.length()").value(2));
+                .andExpect(jsonPath("$.porTipoRecurso.length()").value(2))
+                .andExpect(jsonPath("$.porRecurso.length()").value(2))
+                .andExpect(jsonPath("$.porRecurso[0].tipoRecurso").value("PROFESSOR"))
+                .andExpect(jsonPath("$.porRecurso[0].nomeRecurso").value("Carlos Souza"))
+                .andExpect(jsonPath("$.porRecurso[0].categoria").value("Matematica"))
+                .andExpect(jsonPath("$.porRecurso[0].quantidadeReservas").value(1))
+                .andExpect(jsonPath("$.porRecurso[0].horasUtilizadas").value(1.0))
+                .andExpect(jsonPath("$.porRecurso[1].tipoRecurso").value("SALA"))
+                .andExpect(jsonPath("$.porRecurso[1].nomeRecurso").value("Sala 1"))
+                .andExpect(jsonPath("$.porRecurso[1].categoria").value("Aula"))
+                .andExpect(jsonPath("$.porRecurso[1].quantidadeReservas").value(1))
+                .andExpect(jsonPath("$.porRecurso[1].horasUtilizadas").value(2.0));
 
         mockMvc.perform(get("/api/relatorios/carga-horaria").param("inicio", INICIO).param("termino", TERMINO)
                         .header("Authorization", token(responsavel)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalHorasReservadas").value(3.0))
                 .andExpect(jsonPath("$.porSolicitante[0].solicitanteEmail").value(solicitante.getEmail()))
-                .andExpect(jsonPath("$.porSolicitante[0].horasReservadas").value(3.0));
+                .andExpect(jsonPath("$.porSolicitante[0].horasReservadas").value(3.0))
+                .andExpect(jsonPath("$.totalHorasAlocadas").value(1.0))
+                .andExpect(jsonPath("$.porProfessor[0].professorId").value(professor.getId()))
+                .andExpect(jsonPath("$.porProfessor[0].professorNome").value("Carlos Souza"))
+                .andExpect(jsonPath("$.porProfessor[0].horasAlocadas").value(1.0));
     }
 
     @Test
@@ -120,7 +135,8 @@ class RelatorioPostgresTest {
                         .header("Authorization", token(responsavel)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalReservas").value(0))
-                .andExpect(jsonPath("$.porTipoRecurso.length()").value(0));
+                .andExpect(jsonPath("$.porTipoRecurso.length()").value(0))
+                .andExpect(jsonPath("$.porRecurso.length()").value(0));
 
         mockMvc.perform(get("/api/relatorios/carga-horaria")
                         .param("inicio", "2026-11-05T09:00:00-03:00")
@@ -128,7 +144,9 @@ class RelatorioPostgresTest {
                         .header("Authorization", token(responsavel)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalHorasReservadas").value(0))
-                .andExpect(jsonPath("$.porSolicitante.length()").value(0));
+                .andExpect(jsonPath("$.porSolicitante.length()").value(0))
+                .andExpect(jsonPath("$.totalHorasAlocadas").value(0))
+                .andExpect(jsonPath("$.porProfessor.length()").value(0));
     }
 
     @Test

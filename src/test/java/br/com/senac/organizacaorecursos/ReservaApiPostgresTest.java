@@ -1,5 +1,6 @@
 package br.com.senac.organizacaorecursos;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -113,6 +114,96 @@ class ReservaApiPostgresTest {
                 .andExpect(jsonPath("$.salaId").value(sala.getId()))
                 .andExpect(jsonPath("$.professorId").doesNotExist())
                 .andExpect(jsonPath("$.status").value("APROVADA"));
+    }
+
+    @Test
+    void registraNaoComparecimentoComAuditoriaNotificacaoEPersistencia() throws Exception {
+        Reserva reserva = criarReservaComum();
+
+        mockMvc.perform(post("/api/reservas/" + reserva.getId() + "/nao-compareceu")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NAO_COMPARECEU"));
+
+        assertThat(reservaRepository.findById(reserva.getId()).orElseThrow().getStatus())
+                .isEqualTo(StatusReserva.NAO_COMPARECEU);
+        assertThat(auditoriaRepository.findAllByOrderByCriadoEmDesc())
+                .filteredOn(auditoria -> auditoria.getEntidadeId().equals(reserva.getId()))
+                .anySatisfy(auditoria -> {
+                    assertThat(auditoria.getAcao()).isEqualTo("NAO_COMPARECEU");
+                    assertThat(auditoria.getEstadoAnterior()).isEqualTo("APROVADA");
+                    assertThat(auditoria.getEstadoPosterior()).isEqualTo("NAO_COMPARECEU");
+                    assertThat(auditoria.getDetalhes()).contains("\"operacao\":\"NAO_COMPARECEU\"")
+                            .contains("\"status\":\"APROVADA\"")
+                            .contains("\"status\":\"NAO_COMPARECEU\"")
+                            .doesNotContain("senha", "token", "jwt");
+                });
+        assertThat(notificacaoRepository.findAllByOrderByCriadaEmDesc())
+                .filteredOn(notificacao -> notificacao.getEntidadeId().equals(reserva.getId()))
+                .anySatisfy(notificacao -> assertThat(notificacao.getTipo()).isEqualTo("RESERVA_NAO_COMPARECEU"));
+    }
+
+    @Test
+    void naoComparecimentoExigePerfilOperacionalEProtegeReservaDeTerceiro() throws Exception {
+        Reserva propria = criarReservaComum();
+        Reserva alheia = salvarReserva(outroSolicitante, null, professor, null, StatusReserva.APROVADA);
+
+        mockMvc.perform(post("/api/reservas/" + propria.getId() + "/nao-compareceu"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/reservas/" + propria.getId() + "/nao-compareceu")
+                        .header("Authorization", token(solicitante)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/reservas/" + alheia.getId() + "/nao-compareceu")
+                        .header("Authorization", token(outroSolicitante)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/reservas/" + alheia.getId() + "/nao-compareceu")
+                        .header("Authorization", token(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NAO_COMPARECEU"));
+    }
+
+    @Test
+    void naoComparecimentoRetorna404ParaReservaInexistente() throws Exception {
+        mockMvc.perform(post("/api/reservas/999999/nao-compareceu")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest
+    @MethodSource("statusQueNaoPermitemNaoComparecimento")
+    void naoComparecimentoRejeitaEstadosIncompativeisSemCriarAuditoria(StatusReserva status) throws Exception {
+        Reserva reserva = salvarReserva(solicitante, sala, null, null, status);
+
+        mockMvc.perform(post("/api/reservas/" + reserva.getId() + "/nao-compareceu")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isConflict());
+
+        assertThat(reservaRepository.findById(reserva.getId()).orElseThrow().getStatus()).isEqualTo(status);
+        assertThat(auditoriaRepository.findAllByOrderByCriadoEmDesc())
+                .filteredOn(auditoria -> auditoria.getEntidadeId().equals(reserva.getId())
+                        && "NAO_COMPARECEU".equals(auditoria.getAcao()))
+                .isEmpty();
+    }
+
+    @Test
+    void naoComparecimentoRepetidoNaoDuplicaHistoricoNemNotificacao() throws Exception {
+        Reserva reserva = criarReservaComum();
+
+        mockMvc.perform(post("/api/reservas/" + reserva.getId() + "/nao-compareceu")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/reservas/" + reserva.getId() + "/nao-compareceu")
+                        .header("Authorization", token(responsavel)))
+                .andExpect(status().isConflict());
+
+        assertThat(auditoriaRepository.findAllByOrderByCriadoEmDesc())
+                .filteredOn(auditoria -> auditoria.getEntidadeId().equals(reserva.getId())
+                        && "NAO_COMPARECEU".equals(auditoria.getAcao()))
+                .hasSize(1);
+        assertThat(notificacaoRepository.findAllByOrderByCriadaEmDesc())
+                .filteredOn(notificacao -> notificacao.getEntidadeId().equals(reserva.getId())
+                        && "RESERVA_NAO_COMPARECEU".equals(notificacao.getTipo()))
+                .hasSize(1);
     }
 
     @Test
@@ -549,5 +640,11 @@ class ReservaApiPostgresTest {
 
     private static Stream<Arguments> statusesQueNaoPodemSerCancelados() {
         return Stream.of(StatusReserva.EM_USO, StatusReserva.CONCLUIDA).map(Arguments::of);
+    }
+
+    private static Stream<Arguments> statusQueNaoPermitemNaoComparecimento() {
+        return Stream.of(StatusReserva.SOLICITADA, StatusReserva.EM_USO, StatusReserva.CONCLUIDA,
+                        StatusReserva.REJEITADA, StatusReserva.CANCELADA, StatusReserva.NAO_COMPARECEU)
+                .map(Arguments::of);
     }
 }

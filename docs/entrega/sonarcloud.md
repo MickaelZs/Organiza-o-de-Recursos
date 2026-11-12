@@ -16,8 +16,8 @@ O workflow também declara apenas `contents: read` e `pull-requests: read`, veri
 
 - integração no workflow: CONFIGURADA;
 - token no repositório: NÃO VERSIONADO;
-- execução SonarCloud para a árvore local da Etapa 2: NÃO COMPROVADA, pois não há token/variáveis locais e as alterações ainda não foram publicadas;
+- execução SonarCloud para a árvore local da Etapa 5: NÃO COMPROVADA, pois não há token/variáveis locais e as alterações não foram publicadas;
 - quality gate da árvore local: DESCONHECIDO;
-- evidência remota anterior: o check do commit `d0100a1` reportou Quality Gate passed, mas não é evidência desta árvore local não publicada.
+- evidência remota anterior: o check de `d0100a1` (`main`, 08/11/2026) reportou Quality Gate passed, mas não é evidência do HEAD `f58a68e` nem desta árvore local não publicada.
 
 É necessário manter `SONAR_TOKEN`, `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` configurados no repositório e executar o workflow desta revisão por PR ou push. O resultado efetivo deve ser conferido no check do GitHub/SonarCloud, sem inferência a partir do YAML.

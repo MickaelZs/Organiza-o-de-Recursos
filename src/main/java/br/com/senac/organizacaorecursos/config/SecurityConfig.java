@@ -46,7 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/reservas/*/aprovar", "/api/reservas/*/rejeitar").hasRole("RESPONSAVEL")
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                "/api/reservas/*/retirada", "/api/reservas/*/devolucao").hasAnyRole("RESPONSAVEL", "ADMIN")
+                                "/api/reservas/*/retirada", "/api/reservas/*/devolucao",
+                                "/api/reservas/*/nao-compareceu").hasAnyRole("RESPONSAVEL", "ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/reservas").hasRole("SOLICITANTE")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/reservas/**").hasRole("SOLICITANTE")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/reservas/**").hasRole("SOLICITANTE")

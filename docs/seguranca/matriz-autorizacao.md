@@ -2,7 +2,7 @@
 
 A matriz abaixo corresponde às regras reais de `SecurityConfig` e às verificações de ownership dos services.
 
-Evidência local da Etapa 2: `verify` com Java 21 e Docker Desktop, 204 testes, 0 falhas, 0 erros, 0 ignorados, BUILD SUCCESS. O relatório está em `docs/testes/relatorio-testes.md`.
+Evidência local mais recente completa: Java 21, Docker Desktop/Testcontainers e PostgreSQL 16.15, 214 testes, 0 falhas, 0 erros e 0 ignorados, conforme a execução de 12/11/2026. O relatório está em `docs/testes/relatorio-testes.md`.
 
 | Operação | Anônimo | SOLICITANTE | RESPONSAVEL | ADMIN |
 |---|---:|---:|---:|---:|
@@ -16,6 +16,7 @@ Evidência local da Etapa 2: `verify` com Java 21 e Docker Desktop, 204 testes, 
 | Aprovação/rejeição de reserva restrita | 401 | 403 | permitido | 403 |
 | Criação/consulta/cancelamento de manutenção | 401 | 403 | permitido | permitido |
 | Retirada/devolução de reserva | 401 | 403 | permitido | permitido |
+| Registro de não comparecimento de reserva aprovada | 401 | 403 | permitido | permitido |
 | `GET /api/auditorias` ou `/api/auditoria` | 401 | 403 | permitido | permitido |
 | `GET /api/notificacoes` | 401 | próprias | próprias | próprias |
 | `PATCH /api/notificacoes/{id}/lida` | 401 | própria | própria | própria |

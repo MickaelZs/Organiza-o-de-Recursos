@@ -131,6 +131,11 @@ public class Reserva {
         this.status = StatusReserva.CONCLUIDA;
     }
 
+    public void registrarNaoComparecimento() {
+        if (status != StatusReserva.APROVADA) throw new IllegalStateException("Reserva fora de APROVADA");
+        this.status = StatusReserva.NAO_COMPARECEU;
+    }
+
     public Long getId() { return id; }
     public Usuario getSolicitante() { return solicitante; }
     public Sala getSala() { return sala; }

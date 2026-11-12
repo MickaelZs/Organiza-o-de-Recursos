@@ -5,7 +5,10 @@ import br.com.senac.organizacaorecursos.entity.Perfil;
 import br.com.senac.organizacaorecursos.entity.Usuario;
 import br.com.senac.organizacaorecursos.repository.AuditoriaRepository;
 import br.com.senac.organizacaorecursos.repository.UsuarioRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +18,13 @@ import org.springframework.transaction.annotation.Propagation;
 public class AuditoriaService {
     private final AuditoriaRepository auditoriaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ObjectMapper objectMapper;
 
-    public AuditoriaService(AuditoriaRepository auditoriaRepository, UsuarioRepository usuarioRepository) {
+    public AuditoriaService(AuditoriaRepository auditoriaRepository, UsuarioRepository usuarioRepository,
+                            ObjectMapper objectMapper) {
         this.auditoriaRepository = auditoriaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -38,6 +44,14 @@ public class AuditoriaService {
                 OffsetDateTime.now()));
     }
 
+    @Transactional
+    public Auditoria registrar(String emailAutenticado, String tipoEntidade, Long entidadeId,
+                               String acao, Object estadoAnterior, Object estadoPosterior,
+                               Map<String, Object> detalhes) {
+        return registrar(emailAutenticado, tipoEntidade, entidadeId, acao, estadoAnterior,
+                estadoPosterior, serializarDetalhes(detalhes));
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Auditoria registrarConflitoEvitado(String emailAutenticado, String tipoRecurso, Long recursoId,
                                               String detalhes) {
@@ -49,6 +63,12 @@ public class AuditoriaService {
                 "Conflito evitado para " + tipoRecurso + ": " + detalhes, OffsetDateTime.now()));
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Auditoria registrarConflitoEvitado(String emailAutenticado, String tipoRecurso, Long recursoId,
+                                              Map<String, Object> detalhes) {
+        return registrarConflitoEvitado(emailAutenticado, tipoRecurso, recursoId, serializarDetalhes(detalhes));
+    }
+
     @Transactional(readOnly = true)
     public List<Auditoria> listar(String emailAutenticado) {
         Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
@@ -58,5 +78,13 @@ public class AuditoriaService {
             throw new ReservaOwnershipException();
         }
         return auditoriaRepository.findAllByOrderByCriadoEmDesc();
+    }
+
+    private String serializarDetalhes(Map<String, Object> detalhes) {
+        try {
+            return objectMapper.writeValueAsString(detalhes);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Nao foi possivel serializar os detalhes da auditoria.", exception);
+        }
     }
 }

@@ -28,9 +28,9 @@ O serviço bloqueia pessimisticamente a linha do recurso antes de consultar conf
 - JUnit 5, unitários, parametrizados e integração;
 - API caixa-preta e E2E semântico via MockMvc + PostgreSQL;
 - Testcontainers usa PostgreSQL real;
-- RF08 preserva TDD RED/GREEN nos commits `7948ce7` e `6a758d2`;
+- RF08 preserva TDD RED/GREEN em `7948ce7` (04/11/2026, testes RED de manutenção) seguido de `6a758d2` (04/11/2026, implementação de manutenção); esses commits são históricos e não o HEAD atual;
 - JaCoCo é gerado no `verify`;
 - GitHub Actions executa `clean verify` em push/PR;
 - SonarCloud está configurado condicionalmente, mas depende de secret e variáveis do repositório;
-- JMeter tem plano versionado e execução pendente;
+- JMeter tem plano versionado; consulta e cenários A–F possuem resultados locais agregados, mas JTL/HTML não são artefatos portáveis e a execução ampla preliminar teve falhas registradas;
 - WireMock não é aplicável porque não há integração HTTP externa.

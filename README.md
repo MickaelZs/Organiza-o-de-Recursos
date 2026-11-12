@@ -12,6 +12,8 @@ Projeto acadêmico da disciplina de Qualidade de Software para gerenciamento de 
 
 ## Pré-requisitos e configuração
 
+O passo a passo completo está no [guia de instalação](docs/guia-instalacao.md).
+
 - Java 21;
 - Docker Desktop em execução para os testes PostgreSQL/Testcontainers;
 - PostgreSQL para executar a aplicação fora dos testes.
@@ -94,13 +96,15 @@ Erros comuns: confirme que `DB_URL` aponta para `localhost` ou `127.0.0.1`, cont
 
 - Autenticação: `POST /api/auth/login`;
 - Recursos: `/api/salas`, `/api/professores` e `/api/materiais`;
-- Reservas: `/api/reservas`, aprovação/rejeição e retirada/devolução;
+- Reservas: `/api/reservas`, aprovação/rejeição, retirada/devolução e registro operacional de não comparecimento (`POST /api/reservas/{id}/nao-compareceu`);
 - Manutenção: `/api/manutencoes`;
 - Auditoria: `GET /api/auditorias`;
 - Notificações: `GET /api/notificacoes` e `PATCH /api/notificacoes/{id}/lida`;
 - Relatórios: `GET /api/relatorios/utilizacao`, `/carga-horaria` e `/conflitos-evitados`.
 
-Os relatórios exigem `inicio` e `termino` em ISO-8601 com offset e usam o intervalo semiaberto `[inicio, termino)`. RESPONSAVEL e ADMIN podem consultá-los. A especificação detalhada está em [docs/api-relatorios.md](docs/api-relatorios.md).
+O catálogo completo de endpoints, perfis, payloads e transições está em [docs/api-fluxos.md](docs/api-fluxos.md).
+
+Os relatórios exigem `inicio` e `termino` em ISO-8601 com offset e usam o intervalo semiaberto `[inicio, termino)`. RESPONSAVEL e ADMIN podem consultá-los. Utilização detalha cada recurso e carga horária detalha professores alocados, sem incluir estados não efetivados. A especificação detalhada está em [docs/api-relatorios.md](docs/api-relatorios.md).
 
 ## Perfis e segurança
 
@@ -123,22 +127,35 @@ Flyway aplica, em ordem, V1 a V10. V8 cria os campos de retirada/devolução, V9
 ```bash
 ./mvnw -B test
 ./mvnw -B clean verify
+java scripts/ValidateRtm.java
 ```
 
-No Windows, use `./mvnw.cmd -B clean verify`. Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2.
+No Windows PowerShell, use:
 
-Evidência local da Etapa 2: `verify` executado com Java 21 e Docker Desktop terminou em `BUILD SUCCESS`, com 204 testes, 0 falhas, 0 erros e 0 ignorados. O JaCoCo registrou 948/1.080 linhas (87,78%) e 300/428 branches (70,09%), acima das metas obrigatórias de 80% e 70%; o `jacoco:check` foi executado no `verify`. O detalhamento está em [docs/testes/relatorio-testes.md](docs/testes/relatorio-testes.md). A análise SonarCloud depende das credenciais externas do workflow e não é atribuída a esta árvore local não publicada.
+```powershell
+.\mvnw.cmd -B test
+.\mvnw.cmd -B clean verify
+java scripts\ValidateRtm.java
+```
+
+Os testes críticos de persistência, concorrência e relatórios usam PostgreSQL real por Testcontainers; não há substituição por H2. O verificador da RTM roda após a suíte para validar links, IDs, fontes, testes, evidências e relatórios Surefire das linhas marcadas `PASS`.
+
+Última execução local desta auditoria (12/11/2026): `.\mvnw.cmd -B verify` terminou com `BUILD SUCCESS`, usando Java 21, Docker Desktop/Testcontainers e PostgreSQL 16.15. Foram 214 testes, 0 falhas, 0 erros e 0 ignorados. JaCoCo: 89,22% LINE (1.092/1.224) e 72,07% BRANCH (320/444); o `jacoco-check` passou. Uma tentativa anterior sem acesso ao named pipe do Docker ficou registrada como diagnóstico, sem uso de `-DskipTests`. Consulte o [relatório de testes](docs/testes/relatorio-testes.md). CI/SonarCloud para a árvore local desta auditoria não foram comprovados.
+
+O número 93 registrado no relatório refere-se somente à tentativa diagnóstica parcial bloqueada pelo Docker; ele não representa a suíte final e não deve ser somado aos 214 testes aprovados.
+
+Os resultados históricos de etapas anteriores permanecem preservados no [relatório de testes](docs/testes/relatorio-testes.md): registro `d0100a1` (`main`, 08/11/2026) com 192 testes e registro `f58a68e` (09/11/2026) com 204 testes. Eles não devem ser confundidos com os 214 testes da árvore de trabalho auditada em 12/11/2026.
 
 ## Estrutura
 
 O código fica em `src/main/java/br/com/senac/organizacaorecursos`, organizado em `config`, `controller`, `dto`, `entity`, `exception`, `repository`, `security` e `service`. Requisitos, decisões e rastreabilidade ficam em `docs/`.
 
-Interface responsiva: o sistema disponibiliza uma interface web em `/` com acesso por JWT e painéis condicionados ao perfil. A interface consome as APIs existentes; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos. O redirect documentado pelo Springdoc é `/swagger-ui.html` → `/swagger-ui/index.html`.
+Interface: o sistema disponibiliza uma interface web estática em `/` com acesso por JWT e painéis condicionados ao perfil. A inspeção visual manual em resoluções/dispositivos permanece pendente; mensagens de erro são apresentadas sem expor stack traces, hashes ou segredos. O redirect documentado pelo Springdoc é `/swagger-ui.html` → `/swagger-ui/index.html`.
 
 ## Qualidade e evidências
 
 - [Matriz de rastreabilidade](docs/rtm.md) e [status dos requisitos](docs/status-requisitos.md);
 - [Plano e relatório de testes](docs/testes/plano-testes.md) e [relatório final de testes](docs/testes/relatorio-testes.md);
-- [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/indice.md);
+- [Diagramas versionáveis](docs/diagramas/arquitetura.md), [registro de defeitos](docs/defeitos/registro-defeitos.md) e [índice de evidências](docs/evidencias/README.md);
 - [Plano JMeter](docs/performance/plano-jmeter.md) e [resultado de performance](docs/performance/resultado-jmeter.md);
 - [Guia de prova oral](docs/prova-oral/guia.md) e [relatório final de qualidade](docs/entrega/relatorio-final-qualidade.md).

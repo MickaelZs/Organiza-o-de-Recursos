@@ -63,7 +63,7 @@ public class ReservaService {
         Reserva reserva = reservaRepository.save(new Reserva(solicitante, recurso.sala(), recurso.professor(), recurso.material(),
                 request.inicio(), request.termino(), statusInicial(recurso)));
         auditoriaService.registrar(emailAutenticado, "RESERVA", reserva.getId(), "CRIADA",
-                null, reserva.getStatus().name(), "Reserva criada");
+                null, reserva.getStatus().name(), detalhesReserva("CRIADA", null, reserva));
         return reserva;
     }
 
@@ -90,6 +90,7 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         verificarProprietario(reserva, usuario);
         StatusReserva estadoAnterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
         Recurso recurso = bloquearRecursosParaAtualizacao(reserva, request);
         if (STATUS_QUE_BLOQUEIAM_HORARIO.contains(estadoAnterior)) {
             verificarConflito(emailAutenticado, recurso, request, reserva.getId());
@@ -99,7 +100,7 @@ public class ReservaService {
         reserva.atualizar(recurso.sala(), recurso.professor(), recurso.material(), request.inicio(), request.termino(), status);
         Reserva salva = reservaRepository.save(reserva);
         auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "ALTERADA",
-                estadoAnterior.name(), salva.getStatus().name(), "Reserva alterada");
+                estadoAnterior.name(), salva.getStatus().name(), detalhesReserva("ALTERADA", snapshotAnterior, salva));
         return salva;
     }
 
@@ -111,10 +112,11 @@ public class ReservaService {
         Recurso recurso = bloquearRecursoDaReserva(reserva);
         verificarConflito(emailAutenticado, recurso, reserva.getInicio(), reserva.getTermino(), reserva.getId());
         StatusReserva anterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
         reserva.aprovar();
         Reserva salva = reservaRepository.save(reserva);
         auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "APROVADA",
-                anterior.name(), salva.getStatus().name(), "Reserva aprovada");
+                anterior.name(), salva.getStatus().name(), detalhesReserva("APROVADA", snapshotAnterior, salva));
         notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_APROVADA",
                 "Sua reserva foi aprovada.", "RESERVA", salva.getId());
         return salva;
@@ -126,10 +128,11 @@ public class ReservaService {
         Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
         validarSolicitacaoRestritaPendente(reserva);
         StatusReserva anterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
         reserva.rejeitar();
         Reserva salva = reservaRepository.save(reserva);
         auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "REJEITADA",
-                anterior.name(), salva.getStatus().name(), "Reserva rejeitada");
+                anterior.name(), salva.getStatus().name(), detalhesReserva("REJEITADA", snapshotAnterior, salva));
         notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_REJEITADA",
                 "Sua reserva foi rejeitada.", "RESERVA", salva.getId());
         return salva;
@@ -146,10 +149,11 @@ public class ReservaService {
             throw new ReservaEstadoInvalidoException();
         }
         StatusReserva anterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
         reserva.registrarRetirada(java.time.OffsetDateTime.now());
         Reserva salva = reservaRepository.save(reserva);
         auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "RETIRADA",
-                anterior.name(), salva.getStatus().name(), "Recurso retirado");
+                anterior.name(), salva.getStatus().name(), detalhesReserva("RETIRADA", snapshotAnterior, salva));
         notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_RETIRADA",
                 "A retirada do recurso foi registrada.", "RESERVA", salva.getId());
         return salva;
@@ -169,12 +173,31 @@ public class ReservaService {
             throw new ReservaEstadoInvalidoException();
         }
         StatusReserva anterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
         reserva.registrarDevolucao(java.time.OffsetDateTime.now());
         Reserva salva = reservaRepository.save(reserva);
         auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "DEVOLVIDA",
-                anterior.name(), salva.getStatus().name(), "Recurso devolvido");
+                anterior.name(), salva.getStatus().name(), detalhesReserva("DEVOLVIDA", snapshotAnterior, salva));
         notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_DEVOLVIDA",
                 "A devolucao do recurso foi registrada.", "RESERVA", salva.getId());
+        return salva;
+    }
+
+    @Transactional
+    public Reserva registrarNaoComparecimento(Long id, String emailAutenticado) {
+        usuarioResponsavelOuAdmin(emailAutenticado);
+        Reserva reserva = reservaRepository.findByIdParaAtualizacao(id).orElseThrow(ReservaNotFoundException::new);
+        if (reserva.getStatus() != StatusReserva.APROVADA) {
+            throw new ReservaEstadoInvalidoException();
+        }
+        StatusReserva anterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
+        reserva.registrarNaoComparecimento();
+        Reserva salva = reservaRepository.save(reserva);
+        auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "NAO_COMPARECEU",
+                anterior.name(), salva.getStatus().name(), detalhesReserva("NAO_COMPARECEU", snapshotAnterior, salva));
+        notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_NAO_COMPARECEU",
+                "O nao comparecimento da reserva foi registrado.", "RESERVA", salva.getId());
         return salva;
     }
 
@@ -188,10 +211,11 @@ public class ReservaService {
             throw new ReservaEstadoInvalidoException();
         }
         StatusReserva anterior = reserva.getStatus();
+        Map<String, Object> snapshotAnterior = snapshotReserva(reserva);
         reserva.cancelar();
         Reserva salva = reservaRepository.save(reserva);
         auditoriaService.registrar(emailAutenticado, "RESERVA", salva.getId(), "CANCELADA",
-                anterior.name(), salva.getStatus().name(), "Reserva cancelada");
+                anterior.name(), salva.getStatus().name(), detalhesReserva("CANCELADA", snapshotAnterior, salva));
         notificacaoService.criarParaUsuario(salva.getSolicitante().getEmail(), "RESERVA_CANCELADA",
                 "Sua reserva foi cancelada.", "RESERVA", salva.getId());
     }
@@ -318,10 +342,77 @@ public class ReservaService {
         boolean conflitoManutencao = manutencaoRepository.existsConflito(salaId, professorId, materialId,
                 inicio, termino, StatusManutencao.ATIVA, null);
         if (conflitoReserva || conflitoManutencao) {
+            Map<String, Object> detalhes = new LinkedHashMap<>();
+            detalhes.put("operacao", "CONFLITO_EVITADO");
+            detalhes.put("origem", "RESERVA");
+            detalhes.put("recurso", snapshotRecurso(recurso));
+            detalhes.put("inicio", inicio);
+            detalhes.put("termino", termino);
+            detalhes.put("conflitoReserva", conflitoReserva);
+            detalhes.put("conflitoManutencao", conflitoManutencao);
             auditoriaService.registrarConflitoEvitado(emailAutenticado, tipoRecurso(recurso), idRecurso(recurso),
-                    "Conflito de horario evitado em reserva.");
+                    detalhes);
             throw new ReservaConflitoException();
         }
+    }
+
+    private Map<String, Object> detalhesReserva(String operacao, Map<String, Object> anterior, Reserva posterior) {
+        Map<String, Object> detalhes = new LinkedHashMap<>();
+        detalhes.put("operacao", operacao);
+        detalhes.put("antes", anterior);
+        detalhes.put("depois", snapshotReserva(posterior));
+        return detalhes;
+    }
+
+    private Map<String, Object> snapshotReserva(Reserva reserva) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("reservaId", reserva.getId());
+        snapshot.put("status", reserva.getStatus());
+        snapshot.put("recurso", snapshotRecurso(reserva));
+        snapshot.put("inicio", reserva.getInicio());
+        snapshot.put("termino", reserva.getTermino());
+        snapshot.put("retiradoEm", reserva.getRetiradoEm());
+        snapshot.put("devolvidoEm", reserva.getDevolvidoEm());
+        return snapshot;
+    }
+
+    private Map<String, Object> snapshotRecurso(Reserva reserva) {
+        if (reserva.getSala() != null) return snapshotRecurso(reserva.getSala());
+        if (reserva.getProfessor() != null) return snapshotRecurso(reserva.getProfessor());
+        return snapshotRecurso(reserva.getMaterial());
+    }
+
+    private Map<String, Object> snapshotRecurso(Recurso recurso) {
+        if (recurso.sala() != null) return snapshotRecurso(recurso.sala());
+        if (recurso.professor() != null) return snapshotRecurso(recurso.professor());
+        return snapshotRecurso(recurso.material());
+    }
+
+    private Map<String, Object> snapshotRecurso(Sala sala) {
+        Map<String, Object> recurso = new LinkedHashMap<>();
+        recurso.put("tipo", "SALA");
+        recurso.put("id", sala.getId());
+        recurso.put("nome", sala.getNome());
+        recurso.put("categoria", sala.getTipo());
+        return recurso;
+    }
+
+    private Map<String, Object> snapshotRecurso(Professor professor) {
+        Map<String, Object> recurso = new LinkedHashMap<>();
+        recurso.put("tipo", "PROFESSOR");
+        recurso.put("id", professor.getId());
+        recurso.put("nome", professor.getNome());
+        recurso.put("categoria", professor.getCompetencia());
+        return recurso;
+    }
+
+    private Map<String, Object> snapshotRecurso(Material material) {
+        Map<String, Object> recurso = new LinkedHashMap<>();
+        recurso.put("tipo", "MATERIAL");
+        recurso.put("id", material.getId());
+        recurso.put("nome", material.getNome());
+        recurso.put("categoria", material.getTipo());
+        return recurso;
     }
 
     private String tipoRecurso(Recurso recurso) {

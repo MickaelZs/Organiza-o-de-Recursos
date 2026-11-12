@@ -8,4 +8,6 @@ public record CargaHorariaRelatorioResponse(
         OffsetDateTime inicio,
         OffsetDateTime termino,
         BigDecimal totalHorasReservadas,
-        List<CargaHorariaPorSolicitanteResponse> porSolicitante) { }
+        List<CargaHorariaPorSolicitanteResponse> porSolicitante,
+        BigDecimal totalHorasAlocadas,
+        List<CargaHorariaPorProfessorResponse> porProfessor) { }
