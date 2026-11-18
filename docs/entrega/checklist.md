@@ -1,87 +1,45 @@
-# Checklist de entrega em clone limpo
+# Checklist de entrega
 
-## Complemento operacional
+Auditoria externa em clone temporário novo do commit `080251a54165ed16e0a4c73a1e6be2b4e22b7b6` da branch `main`.
 
-Clone `3d12b9d`: bootstrap em banco novo, health, login e logout confirmados; suite e RTM passaram. A edição de cadastros de recursos não é requisito explicitado no escopo fornecido; os fluxos operacionais foram exercitados conforme a evidência de interface. O material foi testado com dez requisições concorrentes; dados sanitizados estão no [índice de evidências](../evidencias/README.md). A decisão de liberação permanece sujeita à revisão humana, aos checks do commit final e à integração em main.
-
-
-## Correção de contenção — atualização
-
-Teste PostgreSQL com 16 requisições passou e carga combinada repetida teve zero 500. Permanecem pendentes a execução isolada completa dos cenários JMeter, fluxos de navegador, bootstrap em clone limpo, CI/Sonar do commit final e revisão humana. [Resultado](../performance/resultado-01.md).
-
-
-## Atualização da auditoria de 12/11/2026 — branch feature/qa-entrega-final
-
-| Entregável | Existe | Atualização e evidência | Caminho |
+| Item | Existe | Atualizado | Caminho |
 |---|---|---|---|
-| Código e API | Sim | Suíte em clone 33bf864 aprovada; fluxo visual ainda incompleto | [README](../../README.md), [API](../api-fluxos.md) |
-| RTM, testes e cobertura | Sim | 214 testes e gates aprovados no clone; novo resultado deve acompanhar o commit final | [RTM](../rtm.md), [testes](../testes/relatorio-testes.md) |
-| Arquitetura e ATAM | Sim | Revisão do grupo pendente | [diagramas](../diagramas/arquitetura.md), [ATAM](../atam.md) |
-| JMeter e defeitos | Sim | Carga executada com 4 respostas 500; bloqueio aberto | [resultado](../performance/resultado-01.md), [defeitos](../defeitos/registro-defeitos.md) |
-| CI, Sonar e revisão | Sim | Conferir PR e commit final; aprovação humana pendente | [workflow](../../.github/workflows/ci.yml), [Sonar](sonarcloud.md) |
-| Evidências, qualidade e decisão | Sim | Rascunho, sem aprovação dos integrantes | [índice](../evidencias/README.md), [qualidade](relatorio-final-qualidade.md), [decisão](../decisao-qualidade.md) |
-| Apresentação e demonstração | Parcial | Roteiro disponível; apresentação e revisão humana pendentes | [guia](../prova-oral/guia.md) |
-| Release e formulário | Não | Tag, nomes e aprovação pendentes; não publicar | [decisão](../decisao-qualidade.md) |
+| Repositório público com revisão por pares | Parcial | Não no commit avaliado: PR #10 e PR #11 têm checks aprovados, mas o GitHub não registra reviews/aprovação por pares | Repositório: https://github.com/MickaelZs/Organiza-o-de-Recursos ; PR #11: https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/11 |
+| Aplicação executável | Parcial | O código gera projeto Spring Boot, mas não foi possível iniciar nem produzir o JAR nesta avaliação; o daemon Docker estava indisponível e o `verify` terminou antes do empacotamento | [pom.xml](../../pom.xml), [src/main/java/](../../src/main/java/) |
+| README | Sim | Presente no HEAD avaliado; contém pré-requisitos, instalação Windows/Linux, bootstrap, execução e testes | [README.md](../../README.md) |
+| Documentação da API | Sim | Presente no HEAD avaliado | [api-fluxos.md](../api-fluxos.md), [api-recursos.md](../api-recursos.md), [api-relatorios.md](../api-relatorios.md), [api-erros.md](../api-erros.md) |
+| RTM | Sim | Presente no HEAD avaliado; não foi validada nesta execução porque o `verify` falhou antes da etapa válida da suíte | [rtm.md](../rtm.md) |
+| Diagramas de contexto | Sim | Diagramas Mermaid presentes no HEAD avaliado | [diagramas/arquitetura.md](../diagramas/arquitetura.md) |
+| Diagramas de componentes | Sim | Diagramas Mermaid presentes no HEAD avaliado | [diagramas/arquitetura.md](../diagramas/arquitetura.md) |
+| Diagramas de sequências críticas | Sim | A sequência de reserva concorrente está documentada no HEAD avaliado | [diagramas/arquitetura.md](../diagramas/arquitetura.md) |
+| Plano de testes | Sim | Presente no HEAD avaliado | [plano-testes.md](../testes/plano-testes.md) |
+| Relatório de testes | Sim | Presente, mas contém resultados históricos de 12/11/2026 e não prova o HEAD nem o resultado desta execução | [relatorio-testes.md](../testes/relatorio-testes.md) |
+| Pipeline de CI | Sim | Workflow presente e a execução da `main` no SHA avaliado terminou com sucesso no GitHub | [.github/workflows/ci.yml](../../.github/workflows/ci.yml), https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/43345688930 |
+| Relatório SonarCloud | Parcial | Documento presente, mas registra principalmente PR #9/commit 3426e51; PR #11 e o HEAD 080251a têm checks separados aprovados | [sonarcloud.md](sonarcloud.md), https://sonarcloud.io/dashboard?id=MickaelZs_Organiza-o-de-Recursos&pullRequest=11 |
+| Relatório JaCoCo | Não nesta execução | Documentos e histórico citam cobertura, mas não existe `target/site/jacoco/index.html` nem `target/site/jacoco/jacoco.xml` no clone limpo após a falha | [relatorio-testes.md](../testes/relatorio-testes.md), saída esperada: `target/site/jacoco/` |
+| Plano de teste de carga | Sim | Plano versionado presente no HEAD avaliado | [plano-jmeter.md](../performance/plano-jmeter.md) |
+| Resultado do teste de carga | Parcial | Existem resultados documentados, mas não houve JMeter/JTL/HTML atual reproduzido nesta avaliação | [resultado-01.md](../performance/resultado-01.md), [resultado-jmeter.md](../performance/resultado-jmeter.md), [evidências JMeter](../evidencias/jmeter-2026-11-12/) |
+| Registro de defeitos | Sim | Presente no HEAD avaliado | [registro-defeitos.md](../defeitos/registro-defeitos.md) |
+| Relatório final de qualidade | Parcial | Arquivos presentes, mas o relatório principal descreve auditórias anteriores e sinais pendentes; o relatório de entrega é uma ponte compatível | [relatorio-final-qualidade.md](relatorio-final-qualidade.md), [relatorio-qualidade.md](../relatorio-qualidade.md) |
 
-As seções históricas abaixo referem-se ao commit e PR nelas identificados, não ao estado atual.
+## Execução observada
 
+1. Foi criado um clone novo em diretório temporário, sem reutilizar `target/` ou dados do workspace.
+2. A revisão do README encontrou Java 21, Docker, Maven Wrapper e PostgreSQL como pré-requisitos.
+3. Java 21.0.11 estava disponível, mas `JAVA_HOME` não estava definido; a primeira execução de `./mvnw -B verify` falhou com `JAVA_HOME not found in your environment`.
+4. `JAVA_HOME` foi configurado a partir do `java.home` ativo e o comando foi repetido.
+5. Docker Engine apareceu no PATH, mas o daemon não estava acessível no named pipe do Docker Desktop; o Desktop não foi encontrado no caminho padrão desta máquina.
+6. `./mvnw -B verify` terminou em `BUILD FAILURE`: 93 testes executados, 14 erros, 0 falhas e 9 ignorados. Os 14 erros eram testes PostgreSQL/Testcontainers que não encontraram Docker.
+7. Não foi possível iniciar PostgreSQL, bootstrap, servidor ou login, pois o README exige Docker ativo para os testes e o ambiente não disponibilizou o daemon.
+8. Não houve JAR gerado pelo ciclo desta avaliação nem relatório JaCoCo produzido.
 
-## Escopo e evidência
+## Bloqueadores em ordem
 
-- Repositório: MickaelZs/Organiza-o-de-Recursos (público).
-- Branch avaliada: feature/qa-finalizacao-etapas-1-2.
-- Commit avaliado: 3426e518d9993c5db54de088d30773fb60ac1f40.
-- Pull request: [#9](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/9), aberto, sem reviews registrados.
-- Clone: diretório temporário novo, clone shallow do GitHub, confirmado no SHA acima.
-- Comando: .\mvnw.cmd -B clean verify, seguido por java scripts\ValidateRtm.java.
-- Resultado: BUILD SUCCESS; 214 testes, 0 falhas, 0 erros, 0 ignorados; JaCoCo passou; RTM estrutural validada (24 IDs, 177 links locais).
-- Runtime: Java 21.0.11, Docker Engine 29.9.2, PostgreSQL 16.15 via Testcontainers.
-
-## Entregáveis
-
-| Item | Existe | Atualizado para 3426e51 | Caminho ou evidência |
-|---|---|---|---|
-| Repositório público e histórico Git | Sim | Sim | https://github.com/MickaelZs/Organiza-o-de-Recursos |
-| Aplicação Java/Spring Boot | Sim | Build reproduzido | src/main/java/ |
-| Instruções de instalação e primeiro ADMIN | Sim | URL de clone corrigida; fluxo escrito | README.md, docs/guia-instalacao.md |
-| Documentação da API e fluxos | Sim | Revisada no repositório | docs/api-fluxos.md, docs/api-recursos.md, docs/api-relatorios.md, /api-docs |
-| RTM RF/RC/RNF | Sim | Status reconciliados nesta auditoria | docs/rtm.md, docs/status-requisitos.md |
-| Diagramas de contexto/componentes/sequência | Sim | Presentes; revisão visual humana pendente | docs/diagramas/arquitetura.md |
-| ADRs, arquitetura e ATAM/utility tree | Parcial | ADRs/arquitetura existentes; árvore e cenários ATAM preliminares adicionados nesta auditoria, ainda sem validação do grupo | docs/adr/, docs/arquitetura.md, docs/atam.md |
-| Plano e relatório de testes | Sim | Resultado atual registrado | docs/testes/plano-testes.md, docs/testes/relatorio-testes.md |
-| GitHub Actions | Sim | Build verde para o SHA avaliado | run 43265545752 |
-| Artifact de Surefire/JaCoCo | Sim | Baixado e inspecionado | artifact test-reports, run 43265545752 |
-| SonarCloud e Quality Gate | Sim | Aprovados para o PR/SHA | docs/entrega/sonarcloud.md |
-| JMeter: plano de carga | Sim | Planos presentes | docs/performance/*.jmx |
-| JMeter: resultado reproduzível | Parcial | Métricas antigas não reproduzíveis a partir do clone atual | docs/performance/resultado-01.md |
-| Registro de defeitos | Sim | Achados Sonar e correções registrados | docs/defeitos/registro-defeitos.md |
-| Relatório de qualidade | Sim | Atualizado nesta auditoria | docs/entrega/relatorio-final-qualidade.md |
-| Decisão de qualidade assinada pelo grupo | Não | Rascunho técnico; sem assinaturas ou votação presumidas | docs/decisao-qualidade.md |
-| CHANGELOG | Sim | Preparado como draft do release candidate | CHANGELOG.md |
-| Release candidate em main com CI verde | Não | Bloqueado até revisão e integração humana | Nenhuma tag criada |
-
-## Bloqueadores e pendências em ordem
-
-1. Revisão por pares do PR #9: GitHub não registra reviews; um integrante deve
-   revisar e aprovar conforme a prática do grupo.
-2. Execução JMeter atual e isolada: JMeter não está instalado e os JTL/HTML
-   referidos anteriormente não existem no workspace. Executar em ambiente
-   PostgreSQL descartável e preservar relatório sanitizado.
-3. Inspeção visual da interface em desktop e celular e teste manual de login/
-   fluxos principais. A inspeção do navegador não foi concluída neste ambiente.
-4. Revisão humana da reprodutibilidade operacional: o clone reproduziu
-   clean verify, mas não executou o servidor, bootstrap interativo e login
-   seguindo todas as etapas do README.
-5. Identificação do grupo: confirmar nomes completos, contribuição de cada
-   integrante, responsável pelos riscos aceitos e assinaturas/votação.
-6. Após os itens anteriores: aprovar o PR, integrar o SHA aprovado em main,
-   executar CI nessa main e só então autorizar a tag v1.0.0-rc1. Não criar nem
-   mover tag nesta etapa.
-
-## Limites do clone
-
-O diretório temporário foi criado do zero e não reutilizou target/ do workspace.
-O clone e clean verify provam a compilação, os testes de integração, Testcontainers,
-JaCoCo e a RTM estrutural do commit. Não provam configuração de credenciais reais
-de PostgreSQL, bootstrap manual, login visual, desempenho de produção ou
-aprovação do grupo.
+1. Iniciar o Docker Desktop/daemon e disponibilizar o socket para Testcontainers.
+2. Reexecutar `./mvnw -B verify` com Docker ativo até obter build verde no commit final.
+3. Gerar e executar o JAR seguindo o README, incluindo PostgreSQL novo, bootstrap do primeiro ADMIN, JWT e login.
+4. Gerar novamente JaCoCo 80% de linhas/70% de branches e anexar o relatório do commit avaliado.
+5. Executar JMeter em ambiente PostgreSQL descartável e publicar JTL/HTML sanitizados junto ao resultado do commit final.
+6. Obter revisão e aprovação por pares registrada no PR #11 ou em outro PR que contenha o commit exato.
+7. Atualizar o relatório SonarCloud e o relatório final de qualidade para o HEAD `080251a`; não declarar aprovação da tag até essa revisão.
+8. Confirmar assinatura/votação, nomes e responsáveis pelos riscos antes de autorizar uma tag ou release.
