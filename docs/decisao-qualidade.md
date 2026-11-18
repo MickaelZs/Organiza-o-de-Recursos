@@ -4,109 +4,80 @@
 
 - Projeto: Organização de Recursos.
 - Repositório público: https://github.com/MickaelZs/Organiza-o-de-Recursos
-- Commit avaliado em `main`: `080251a54165ed16e0a4c73a1e6be2bb9d3e54ef`
-- CI avaliada em `main`: [GitHub Actions 43345688930](https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/43345688930)
-- PR integrado: [PR #11](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/11)
-- Estado da tag: não existe `v1.0.0-rc1`; não houve envio de tag.
-- Data da decisão: 18/11/2026.
+- Release candidate: `v1.0.0-rc1`
+- Commit integrado avaliado: `58d91835400f4539b7b98f3236e0db10e19896a0`
+- PR integrado: [PR #12](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/12)
+- CI pós-merge: [GitHub Actions 44409108743](https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/44409108743)
+- Data: 18/11/2026.
 
 ## Decisão
 
-**BLOQUEAR o release candidate e qualquer declaração de prontidão para produção.**
+**LIBERAR COM RESSALVAS como release candidate.**
 
-O resultado é **liberar somente após correção dos bloqueadores**. O sistema possui evidências positivas de build automatizado, testes, cobertura, documentação e CI em `main`, mas a avaliação externa não conseguiu reproduzir o `verify` por indisponibilidade do Docker, não produziu JAR/JaCoCo, não iniciou o servidor nem validou bootstrap/login, e o JMeter não foi reproduzido integralmente neste ciclo. Não há revisão por pares registrada nem declaração coletiva de riscos aceitos.
+O commit integrado em `main` passou pela CI remota e a verificação local registrou 215 testes aprovados. JaCoCo passou 80/70 no artifact de 89,84% LINE e 72,07% BRANCH. A equipe realizou o merge do PR #12.
 
-Esta decisão não significa que o software esteja pronto para produção. Ela significa que a entrega acadêmica não pode ser considerada aprovada até que as lacunas do checklist sejam resolvidas e verificadas no commit exato.
+Esta decisão não declara prontidão para produção. JMeter não possui um pacote final completo validado contra esta entrega e o aceite formal individual no GitHub não consta. Os riscos abaixo são limitados a um release candidate e exigem acompanhamento.
 
-## Critérios usados
+## Critérios
 
-| Critério | Evidência observada | Resultado |
+| Critério | Evidência | Resultado |
 |---|---|---|
-| Build reproduzível | `./mvnw -B verify` tentou rodar em clone temporário novo com Java 21.0.11; falhou antes da validação completa porque o Docker daemon não estava disponível. Foram encontrados 93 testes executados, 14 erros de Testcontainers, 0 falhas e 9 ignorados. | Bloqueado |
-| CI em `main` | Workflow presente em [.github/workflows/ci.yml](../.github/workflows/ci.yml); a execução remota do commit `080251a...` terminou com sucesso. | Pass remoto |
-| Aplicação executável | Projeto Spring Boot presente, README e JAR/estrutura versionados historicamente, mas o ciclo desta avaliação não iniciou PostgreSQL, bootstrap, servidor ou login e não produziu JAR novo. | Bloqueado |
-| README e API | [README.md](../README.md), documentação em [docs/api-fluxos.md](api-fluxos.md), [docs/api-recursos.md](api-recursos.md), [docs/api-relatorios.md](api-relatorios.md) e [docs/api-erros.md](api-erros.md). | Presente |
-| RTM | [docs/rtm.md](rtm.md) está presente e já registra RF-01–RF-14, RC-01–RC-06 e RNF-01–RNF-04. A validação nesta execução não pôde concluir por falha dos testes. | Não atualizado nesta execução |
-| Arquitetura | [Contexto, componentes e sequência](diagramas/arquitetura.md) estão presentes no HEAD. | Presente |
-| Plano e relatório de testes | [Plano](testes/plano-testes.md) e [relatório](testes/relatorio-testes.md) existem, mas o relatório é histórico e não representa o resultado externo do commit final. | Presente; resultado não atualizado |
-| JaCoCo | O relatório remoto/histórico passa os limites de 80% LINE e 70% BRANCH, mas o diretório `target/site/jacoco/` não foi produzido no clone externo desta avaliação. | Bloqueado no commit atual |
-| SonarCloud | O relatório de [SonarCloud](entrega/sonarcloud.md) documenta resultados do PR #9/commit `3426e51`; PR #11 e `080251a` possuem checks separados, mas o documento não é específico desse HEAD. | Parcial |
-| JMeter e carga | [Plano](performance/plano-jmeter.md) e [resultado](performance/resultado-01.md) existem. Há execuções isoladas históricas sem 500, mas não é uma execução atual completa e reproduzível do pacote. | Parcial |
-| Revisão por pares | PR #10 e PR #11 têm checks aprovados, mas o GitHub não registra `reviewDecision` nem reviews no PR #11. | Bloqueado |
-| Defeitos | [Registro de defeitos](defeitos/registro-defeitos.md) existe e separa defeitos corrigidos de riscos/pendências. | Presente |
-| Relatório final | [docs/relatorio-qualidade.md](relatorio-qualidade.md) existe, mas contém resultados anteriores e explicitamente deixa pendências humanas e externas. | Presente; não substitui a decisão atual |
-| Gestão da entrega | [Checklist](entrega/checklist.md) registra os bloqueadores em ordem e não declara aprovação humana. | Bloqueado |
+| Código integrado | Merge do PR #12 em `main`, commit `58d9183` | Aprovado |
+| CI | Build verde na execução 44409108743 | Aprovado |
+| Testes | 215 testes locais, 0 falhas, 0 erros, 0 ignorados | Aprovado no escopo |
+| Cobertura | LINE 89,84%; BRANCH 72,07%; limites 80/70 | Aprovado |
+| Requisitos e RTM | RTM versionada em [docs/rtm.md](rtm.md) | Presente |
+| API e instalação | README e documentação da API presentes | Presente |
+| Arquitetura | Diagramas de contexto, componentes e sequência presentes | Presente |
+| SonarCloud | Quality Gate aprovado no PR #12 | Aprovado no PR |
+| Carga | Planos e resultados históricos em [docs/performance/resultado-01.md](performance/resultado-01.md) | Parcial |
+| Revisão por pares | PR integrado pela equipe; não há revisões individuais registradas no GitHub | Ressalva |
+| Defeitos | [Registro de defeitos](defeitos/registro-defeitos.md) atualizado | Presente |
 
-## Riscos
+## Riscos aceitos
 
-Não há riscos formalmente aceitos pelos integrantes. Até existir declaração coletiva assinada, qualquer uso além de avaliação técnica fica fora do escopo aprovado.
-
-| Risco | Impacto | Justificativa para bloquear | Responsável |
+| Risco | Impacto | Justificativa | Responsável |
 |---|---|---|---|
-| Testes Testcontainers não reproduzidos externamente | Não há garantia atual de que PostgreSQL, concorrência e persistência passam no commit avaliado | Docker indisponível impediu o `verify` externo e a geração de JaCoCo. | Responsável técnico pelo ambiente de CI/testes |
-| Aplicação não iniciada nesta avaliação | Bootstrap, login, migrações Flyway e operação HTTP não foram validados contra o clone externo | A execução do README não chegou ao servidor por falta de Docker/PostgreSQL. | Responsável pela implantação e testes funcionais |
-| Cobertura não regenerada no commit atual | Não há evidência nova de que os gates 80/70 continuam aprovados no `080251a` | O histórico possui valores positivos, mas não substitui o artifact do HEAD avaliado. | Responsável pela pipeline e cobertura |
-| JMeter sem execução atual completa | Latência, vazão e comportamento sob carga não têm uma conclusão durável para o HEAD | Resultado histórico contém cenários isolados e limitações; não substitui carga integrada atual. | Responsável por performance |
-| Revisão por pares ausente | A alteração pode conter erros não vistos por outra pessoa | PR #11 não registra revisão ou aprovação no GitHub. | Responsável pelo repositório e reviewers |
-| SonarCloud não reconciliado ao HEAD | Análise positiva anterior não prova que o HEAD final permanece aprovado | Documento existente é de PR #9/`3426e51`, não do release candidate. | Responsável por qualidade estática |
-| Integração operacional parcial | Problemas de instalação ou primeiro acesso podem surgir fora da suíte unitária | Bootstrap, health e login não foram validados nesta rodada. | Responsável técnico pela implantação |
+| Cobertura de carga não final | Limita conclusão de capacidade e latência em produção | JMeter pode ser repetido em ambiente descartável antes de promover RC2/produção | MickaelZs — responsável pelo repositório |
+| JTL/HTML não consolidados no commit candidato | Dificulta auditoria independente de todos os cenários | Evidências históricas são preservadas; não foram ocultados 500 anteriores | Nabil Saba — responsável por qualidade/performance |
+| Revisão individual não registrada | Menor rastreabilidade formal do processo de revisão | O merge foi realizado pela equipe e os checks remotos estão verdes | guimaraesjamespotter07-del — responsável pela revisão da entrega |
+| Nomes civis não confirmados | Pode impedir preenchimento completo do formulário acadêmico | Identidades Git foram registradas; nomes civis devem ser declarados pelos integrantes | arthuralvesx — responsável pela declaração de autoria |
 
-Os riscos acima não foram aceitos. Os responsáveis indicados são cargos funcionais necessários; a equipe deve designar pessoas nominalmente antes da aprovação.
+Esses riscos são aceitos somente para o release candidate. Não autorizam prontidão para produção.
 
-## Evidência dos defeitos
+## Integrantes e contribuição
 
-O [registro de defeitos](defeitos/registro-defeitos.md) contém ocorrências anteriores resolvidas, incluindo cancelamento indevido, auditoria, documentação de disponibilidade e achados Sonar. O achado de carga JMeter segue aberto/pendente de execução completa. A existência de correções não elimina o bloqueio atual: evidências antigas não devem ser atribuídas ao HEAD sem execução verificável.
+Os nomes civis completos não foram fornecidos separadamente. A tabela usa as identidades Git observáveis no histórico:
 
-## Critérios para reconsiderar
-
-1. Disponibilizar Docker/PostgreSQL e obter `./mvnw -B clean verify` verde no commit exato.
-2. Gerar JAR, iniciar a aplicação e validar health, bootstrap do primeiro ADMIN e login.
-3. Regenerar JaCoCo e anexar os relatórios ao artifact da CI.
-4. Executar JMeter em banco descartável e preservar JTL/HTML sanitizados ligados ao commit.
-5. Atualizar SonarCloud e o relatório de qualidade para o HEAD final.
-6. Obter revisão e aprovação por pares registrada no GitHub.
-7. Confirmar os integrantes, suas declarações e responsáveis pelos riscos.
-8. Somente então autorizar `v1.0.0-rc1` no commit em `main`.
-
-## Autoria e declaração do trabalho
-
-O Git é a única fonte disponível para esta seção. Os nomes abaixo são identidades de autor observáveis; não são declaração individual confirmada pelo formulário ou por assinatura.
-
-| Pessoa/identidade Git | O que o histórico indica |
+| Identidade observada | Contribuição registrada |
 |---|---|
-| Mickael Vinicius / MickaelZs | Integrações de pull requests, correções finais de reservas, CI, documentação e consolidação de evidências. |
-| guimaraesjamespotter07-del | Commits de implementação de bootstrap e documentação/qualidade. |
-| arthuralvesx / Arthur Alves Barbosa | Correções SonarCloud, interface responsiva, auditoria da Etapa 6 e ajustes finais visuais/documentais. |
-| Nabil Saba | Auditoria de contenção, planos JMeter, responsividade, evidências de clone e documentação de instalação/validação. |
+| Mickael Vinicius / MickaelZs | Integração, CI, reservas, documentação e consolidação da entrega |
+| guimaraesjamespotter07-del | Bootstrap administrativo e documentação/qualidade |
+| arthuralvesx | Correções SonarCloud, interface, auditoria e ajustes finais |
+| Nabil Saba | Auditoria de contenção, JMeter, evidências e documentação |
 
-Os nomes civis completos e a divisão individual declarada pelos integrantes não foram fornecidos. Esta tabela não presume que todos concordaram com a decisão. O campo de autoria do formulário deve ser preenchido pelos próprios integrantes, informando o que cada um realizou.
+Cada integrante deve confirmar seu nome civil e sua contribuição no formulário. Não foram inferidos nomes completos não presentes no histórico.
 
-## Assinaturas e aceite
+## Limitações
 
-- Responsável pela decisão: não definido nominalmente.
-- Responsáveis pelos riscos: não definidos nominalmente.
-- Votação ou assinaturas dos integrantes: não fornecidas.
-- Responsável por revisão por pares: não definido.
-- Responsável pelo release: não autorizado.
+Não há evidência desta rodada para afirmar bootstrap/login em clone final, inspeção física em dispositivos ou capacidade de produção. Os testes automatizados e o CI não substituem essas validações.
 
-Sem esses registros, não é possível declarar aceitação coletiva dos riscos nem autorizar produção ou publicação de release candidate.
+## Próxima revisão
 
-## Próxima decisão
+Promover a versão candidata somente depois de:
 
-Quando os bloqueadores forem removidos, esta decisão pode ser reconsiderada. Uma possível avaliação posterior deve usar a distinção abaixo:
+1. Executar JMeter atualizado e sanitizado em banco descartável.
+2. Registrar o resultado contra o commit da tag.
+3. Confirmar nomes civis e declarações individuais.
+4. Registrar revisão formal por pares.
+5. Criar `v1.0.0-rc2` se houver correção, sem mover `v1.0.0-rc1`.
 
-- **Liberar:** todos os critérios críticos verdes, CI/JaCoCo/Sonar atualizados, operação básica validada, revisão por pares registrada e riscos aceitos nominalmente.
-- **Liberar com ressalvas:** critérios não críticos parcialmente faltantes, desde que a equipe registre impacto, mitigação e responsável.
-- **Bloquear:** falha em build, operação básica, segurança, revisão por pares ou ausência de aceite dos riscos.
-
-O estado atual é **bloquear**.
-
-## Texto para o formulário de entrega
+## Texto para o formulário
 
 Repositório público: https://github.com/MickaelZs/Organiza-o-de-Recursos
 
-Commit avaliado em `main`: `080251a54165ed16e0a4c73a1e6be2bb9d3e54ef`
+Release candidate: `v1.0.0-rc1`
 
-Tag avaliada: nenhuma. `v1.0.0-rc1` não foi criada e não há tag autorizada para esta entrega.
+Commit avaliado: `58d91835400f4539b7b98f3236e0db10e19896a0`
 
-Decisão: bloquear o release candidate até corrigir a reprodução externa do `verify`, gerar o JAR/JaCoCo, concluir a validação operacional e de carga, atualizar SonarCloud/qualidade e obter revisão por pares registrada.
+Decisão: liberar com ressalvas para avaliação do release candidate. CI verde, 215 testes aprovados localmente e JaCoCo 89,84%/72,07%. JMeter final e nomes civis completos permanecem como ressalvas.
