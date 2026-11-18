@@ -1,51 +1,40 @@
 # Changelog
 
-## Não lançado — validação funcional complementar
+## v1.0.0-rc1
 
-- Registrados os fluxos obrigatórios no Chromium, com dados sintéticos, e os cenários JMeter B e D isolados.
-- Reconciliado o escopo: edição de reservas é obrigatória; edição dos cadastros de recursos não é exigência explícita no escopo fornecido.
+Data da decisão: 18/11/2026.
 
+### Funcionalidades
 
-## Não lançado — correção da contenção de auditoria
+- Gestão de salas, professores e materiais.
+- Login com JWT e autorização por perfis ADMIN, RESPONSAVEL e SOLICITANTE.
+- Solicitação, alteração e cancelamento de reservas.
+- Aprovação/rejeição de recursos restritos.
+- Retirada, devolução e registro de não comparecimento.
+- Manutenção de recursos, auditoria, notificações e relatórios.
+- Interface web responsiva e documentação OpenAPI/REST.
 
-- A auditoria de conflito usa a mesma transação antes de mudanças de domínio, evitando esgotamento do pool por transações aninhadas; teste concorrente PostgreSQL adicionado.
-- A regressão e os resultados de carga foram registrados com suas limitações.
+### Qualidade
 
+- Build Maven e suíte JUnit com PostgreSQL via Testcontainers.
+- Gates JaCoCo de 80% de linhas e 70% de branches.
+- Pipeline GitHub Actions para PRs e `main`.
+- Análise SonarCloud no PR #12.
+- RTM, matriz de autorização, ADRs e diagramas da solução.
+- Registro de defeitos e evidências de testes, carga e qualidade.
 
-## Não lançado — auditoria 12/11/2026
+### Evidências de release
 
-- Corrigida a leitura de tokens de ambiente nos planos JMeter 5.6.3.
-- Ajustado o cabeçalho em telas estreitas; validação visual completa pendente.
-- Registrada execução de carga com HTTP 500 e decisão técnica de bloquear a liberação.
+- Commit avaliado da integração: `58d91835400f4539b7b98f3236e0db10e19896a0`.
+- Pull request integrado: [PR #12](https://github.com/MickaelZs/Organiza-o-de-Recursos/pull/12).
+- CI pós-merge: [GitHub Actions 44409108743](https://github.com/MickaelZs/Organiza-o-de-Recursos/actions/runs/44409108743).
+- Resultado local de verificação: 215 testes, 0 falhas, 0 erros e 0 ignorados.
+- JaCoCo remoto no CI: LINE 89,84% e BRANCH 72,07%.
 
+### Ressalvas
 
-## v1.0.0-rc1 — rascunho de escopo
+- JMeter possui planos e resultados históricos, mas não há pacote final isolado e durável para todos os cenários.
+- O aceite formal por revisão individual no GitHub não consta; o registro humano disponível é o merge do PR #12.
+- Os nomes civis completos e o aceite nominal individual dependem de declaração dos integrantes.
 
-Estado: release candidate ainda não criado. Este conteúdo descreve o trabalho
-atualmente presente na branch feature/qa-finalizacao-etapas-1-2; o commit final
-da tag precisa ser o commit avaliado em main após revisão e integração.
-
-### Funcionalidades e qualidade
-
-- Bootstrap seguro do primeiro administrador com proteção de banco local vazio,
-  Flyway, BCrypt e lock transacional PostgreSQL.
-- Reservas, manutenção, aprovação de recursos restritos, retirada/devolução,
-  auditoria, notificações e relatórios.
-- Interface web e documentação de API, requisitos, arquitetura e operação.
-- Testes unitários, API e integração PostgreSQL via Testcontainers, com gates
-  JaCoCo de 80% de linhas e 70% de branches.
-- GitHub Actions, publicação de relatórios de teste/JaCoCo e análise SonarCloud.
-
-### Correções recentes na branch do PR #9
-
-- Reutilização de SecureRandom para gerar a chave temporária do bootstrap.
-- Remoção da chamada entre métodos transacionais da mesma classe no registro de
-  conflitos evitados, preservando REQUIRES_NEW.
-- Atualização do pacote de evidências e do parecer técnico para o estado real
-  do PR e das verificações disponíveis.
-
-### Estado das evidências
-
-O commit 3426e51 do PR #9 tem build e SonarCloud aprovados e passou
-clean verify em clone temporário. A tag e a execução CI sobre main permanecem
-pendentes de revisão humana, integração e autorização do responsável.
+Não declarar prontidão para produção a partir desta versão candidata.
